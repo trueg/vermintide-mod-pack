@@ -69,7 +69,7 @@ LoadoutSaver = {
 		local equipment_queue = self._equipment_queue
 
 		-- First remove all trinkets in case the loadout contains a trinket that is currently
-		-- equipped but in a different slot.
+ 		-- equipped but in a different slot.
 		for _, slot_name in ipairs(InventorySettings.slot_names_by_type["trinket"]) do
 			local slot_index = InventorySettings.slots_by_name[slot_name].inventory_button_index
 			equipment_page:remove_inventory_item(nil, slot_index)

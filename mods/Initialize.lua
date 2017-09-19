@@ -45,15 +45,15 @@ Mods.init = function()
 	Mods.exec("patch", "SkinDisabler")
 	Mods.exec("patch", "MutatorSelector")
 	Mods.exec("patch", "ChangeWeaponModelsWarning")
-
-	Mods.exec("patch", "PauseGame")
-	Mods.exec("patch", "SkipCutscenes")
-
+	
 	-- Unstable mod loaded only if the warning setting is enabled.
 	if Application.user_setting("cb_weapon_model_warning") then
 		Mods.exec("patch", "ChangeWeaponModels")
 	end
 
+	Mods.exec("patch", "PauseGame")
+	Mods.exec("patch", "SkipCutscenes")
+	
 	--Additional mods go here :
 	--Mods.exec("patch", "Mod file name here")
 

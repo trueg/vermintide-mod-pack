@@ -235,7 +235,7 @@ local function trigger_player_taking_damage_buffs(player_unit, attacker_unit, is
 
 	return
 end
-
+ 
 local function trigger_player_friendly_fire_dialogue(player_unit, attacker_unit)
 	local player_manager = Managers.player
 
@@ -249,7 +249,7 @@ local function trigger_player_friendly_fire_dialogue(player_unit, attacker_unit)
 
 		dialogue_input.trigger_dialogue_event(dialogue_input, "friendly_fire", event_data)
 	end
-
+ 
 	return
 end
 
@@ -581,7 +581,7 @@ Mods.hook.set(mod_name, "HitReactions.templates.player.unit", function(func, uni
 			if ((damage_type ~= "burn" and damage_type ~= "burninating") or
 				(string.find(damage_source_name, "bw_skullstaff_geiser") == nil and
 				(damage_type ~= "burninating" or string.find(damage_source_name, "grenade_fire") == nil))) then
-
+ 
 				local first_person_extension = ScriptUnit.extension(unit, "first_person_system")
 
 				if 0 < hit[DamageDataIndex.DAMAGE_AMOUNT] then
@@ -596,12 +596,12 @@ Mods.hook.set(mod_name, "HitReactions.templates.player.unit", function(func, uni
 
 	return
 end)
-
+ 
 Mods.hook.set(mod_name, "DamageIndicatorGui.update", function(func, self, dt)
     if not user_setting(MOD_SETTINGS.ALTERNATIVE_FF_UI.save) then
         return func(self, dt)
     end
-
+ 
     local input_manager = self.input_manager
     local input_service = input_manager.get_service(input_manager, "ingame_menu")
     local ui_renderer = self.ui_renderer
@@ -610,17 +610,17 @@ Mods.hook.set(mod_name, "DamageIndicatorGui.update", function(func, self, dt)
     local peer_id = self.peer_id
     local my_player = self.player_manager:player_from_peer_id(peer_id)
     local player_unit = my_player.player_unit
-
+ 
     if not player_unit then
         return
     end
-
+ 
     UIRenderer.begin_pass(ui_renderer, ui_scenegraph, input_service, dt, "damage_indicator_center")
-
+ 
     local damage_extension = ScriptUnit.extension(player_unit, "damage_system")
     local strided_array, array_length = damage_extension.recent_damages(damage_extension)
     local indicator_positions = self.indicator_positions
-
+ 
     if 0 < array_length then
         for i = 1, array_length/DamageDataIndex.STRIDE, 1 do
             local index = (i - 1)*DamageDataIndex.STRIDE
@@ -628,35 +628,35 @@ Mods.hook.set(mod_name, "DamageIndicatorGui.update", function(func, self, dt)
             local damage_type = strided_array[index + DamageDataIndex.DAMAGE_TYPE]
             local damage_source_name = strided_array[index + DamageDataIndex.DAMAGE_SOURCE_NAME]
             local show_direction = not ignored_damage_types_indicator[damage_type]
-
+ 
             if ((is_player_unit(attacker) and attacker ~= player_unit) or
                 (damage_type == "burninating" and string.find(damage_source_name, "grenade_fire") ~= nil) or
                 ((damage_type == "burn" or damage_type == "burninating") and string.find(damage_source_name, "bw_skullstaff_geiser") ~= nil)) then
                 show_direction = false
             end
-
+ 
             if attacker and Unit.alive(attacker) and show_direction then
                 local next_active_indicator = self.num_active_indicators + 1
-
+ 
                 if next_active_indicator <= MAX_INDICATOR_WIDGETS then
                     self.num_active_indicators = next_active_indicator
                 else
                     next_active_indicator = 1
                 end
-
+ 
                 local widget = indicator_widgets[next_active_indicator]
                 local indicator_position = indicator_positions[next_active_indicator]
                 local attacker_position = POSITION_LOOKUP[attacker] or Unit.world_position(attacker, 0)
-
+ 
                 Vector3Aux.box(indicator_position, attacker_position)
-
+ 
                 indicator_position[3] = 0
-
+ 
                 UIWidget.animate(widget, UIAnimation.init(UIAnimation.function_by_time, widget.style.rotating_texture.color, 1, 255, 0, 1, math.easeInCubic))
             end
         end
     end
-
+ 
     local first_person_extension = ScriptUnit.extension(player_unit, "first_person_system")
     local my_pos = Vector3.copy(POSITION_LOOKUP[player_unit])
     local my_rotation = first_person_extension.current_rotation(first_person_extension)
@@ -667,10 +667,10 @@ Mods.hook.set(mod_name, "DamageIndicatorGui.update", function(func, self, dt)
     my_pos.z = 0
     local i = 1
     local num_active_indicators = self.num_active_indicators
-
+ 
     while i <= num_active_indicators do
         local widget = indicator_widgets[i]
-
+ 
         if not UIWidget.has_animation(widget) then
             local swap = indicator_widgets[num_active_indicators]
             indicator_widgets[i] = swap
@@ -683,15 +683,15 @@ Mods.hook.set(mod_name, "DamageIndicatorGui.update", function(func, self, dt)
             local angle = math.atan2(left_dot_dir, forward_dot_dir)
             widget.style.rotating_texture.angle = angle
             i = i + 1
-
+ 
             UIRenderer.draw_widget(ui_renderer, widget)
         end
     end
-
+ 
     self.num_active_indicators = num_active_indicators
-
+ 
     UIRenderer.end_pass(ui_renderer)
-
+ 
     return
 end)
 
@@ -772,23 +772,23 @@ Mods.hook.set(mod_name, "UnitFrameUI.draw", function(orig_func, self, dt)
 
 		if user_setting(MOD_SETTINGS.DODGE_TIRED.save) then
 			local widget = self._dodge_tired_widget
-
+ 
 			if not widget then
 				local widget_settings = {}
 				widget_settings = table.create_copy(widget_settings, dodge_tired_widget)
 				widget = UIWidget.init(widget_settings)
 				self._dodge_tired_widget = widget
 			end
-
+ 
 			if data._hudmod_dodge_value == nil or data._hudmod_dodge_value >= 1.7 then
 				widget.content.dodge_tired_text = ""
 			else
 				widget.content.dodge_tired_text = "TIRED"
 			end
-
+ 
 			UIRenderer.draw_widget(ui_renderer, widget)
 		end
-
+ 
 		UIRenderer.end_pass(ui_renderer)
 	end
 

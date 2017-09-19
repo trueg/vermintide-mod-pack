@@ -1,6 +1,6 @@
 --[[
 	authors: grimalackt, iamlupo, walterr
-
+ 
 	Ammo meters for other team members, with network functionality to share status between modded users.
 
 --]]
@@ -13,7 +13,7 @@ local RPC_HUDMOD_REQUEST_AMMO_UPDATE = "rpc_hudmod_request_ammo_update"
 
 --[[
 	Setting defs.
---]]
+--]] 
 local MOD_SETTINGS = {
 	SUB_GROUP = {
 		["save"] = "cb_ammo_meter_subgroup",
@@ -162,7 +162,7 @@ local ammo_meter_widget =
 		},
 	},
 }
-
+ 
 --[[
 	Checks whether an ammo meter is permitted for the player attached to the given unit frame.
 	Currently only bot players are permitted.
@@ -174,7 +174,7 @@ local function check_ammo_meter_allowed(unit_frame)
 	end
 	return data._hudmod_ammo_meter_allowed
 end
-
+ 
 --[[
 	Helper function to retrieve the ammo extension from the given slot data.
 --]]
@@ -187,7 +187,7 @@ local function get_ammo_extension(slot_data)
 	end
 	return nil
 end
-
+ 
 --[[
 	Returns the current ammo and the maximum ammo from the given ammo.  Based on
 	SimpleInventoryExtension.current_ammo_status, which we can't use because it doesn't give the max
@@ -199,13 +199,13 @@ local function current_ammo_status(inventory_extn, is_bot)
 		local item_data = slot_data.item_data
 		local item_template = BackendUtils.get_item_template(item_data)
 		local ammo_data = item_template.ammo_data
-
+ 
 		if ammo_data then
 			local ammo_extn = get_ammo_extension(slot_data)
 			if ammo_extn then
 				return ammo_extn:total_remaining_ammo(), ammo_extn.max_ammo
 			end
-
+ 
 			if slot_data.ammo_extn then
 				local max_ammo = ammo_data.max_ammo
 				for _, trait_name in pairs(slot_data.item_data.traits) do
@@ -224,12 +224,12 @@ local RPC_UPDATE_QUEUE = {}
 local function on_rpc_ammo_update(sender_id, unit_id, ammo_count)
 	local ingame_ui = Managers.matchmaking.ingame_ui
 	local unit_frames_handler = ingame_ui and ingame_ui.ingame_hud.unit_frames_handler
-
+ 
 	if unit_frames_handler then
 		local unit_frames = unit_frames_handler:_get_unit_frames()
 		local unit_frame = nil
 		local network_manager = Managers.state.network
-
+ 
 		if Managers.player.is_server then
 			for index, uframe in ipairs(unit_frames) do
 				if uframe.player_data.peer_id == sender_id and uframe.player_data.player._player_controlled then
@@ -243,17 +243,17 @@ local function on_rpc_ammo_update(sender_id, unit_id, ammo_count)
 					unit_frame = uframe
 				end
 			end
-		end
+		end	
 
 		local extensions = unit_frame and unit_frame.player_data.extensions
 		local inventory_extn = extensions and extensions.inventory
 		local slot_data = inventory_extn and inventory_extn:equipment().slots["slot_ranged"]
-
+ 
 		if slot_data then
 			slot_data.ammo_extn = {}
-
+ 
 			slot_data.ammo_extn.available_ammo = ammo_count
-
+ 
 			-- Also update _hudmod_ammo_meter_allowed in case this is the first time we have
 			-- received ammo info from this player.
 			unit_frame.data._hudmod_ammo_meter_allowed = true
@@ -263,7 +263,7 @@ local function on_rpc_ammo_update(sender_id, unit_id, ammo_count)
 				local bots_have_info = false
 				for _, player in pairs(Managers.player:bots()) do
 					local bot_unit_id = network_manager.unit_game_object_id(network_manager, player.player_unit)
-
+ 
 					if frame_unit_id == bot_unit_id and unit_frame.data._hudmod_ammo_meter_allowed == true then
 						bots_have_info = true
 					end
@@ -283,7 +283,7 @@ end
 
 Mods.hook.set(mod_name, "UnitFramesHandler.update", function(orig_func, self, dt, t, my_player)
 	local player_unit = self.my_player.player_unit
-	if player_unit then
+	if player_unit then 
 		-- Update value for ammo meter.
 		if user_setting(MOD_SETTINGS.TEAM_AMMO_METERS.save) then
 			local unit_frame = self._unit_frames[self._current_frame_index]
@@ -304,7 +304,7 @@ Mods.hook.set(mod_name, "UnitFramesHandler.update", function(orig_func, self, dt
 				end
 			end
 		end
-
+ 
 		local network_manager = Managers.state.network
 		for _, unit_frame in pairs(self._unit_frames) do
 			local frame_unit_id = network_manager.unit_game_object_id(network_manager, unit_frame.player_data.player_unit)
@@ -322,11 +322,11 @@ end)
 Mods.hook.set(mod_name, "UnitFrameUI.draw", function(orig_func, self, dt)
 	local data = self.data
 	if self._is_visible and data._hudmod_ammo_value ~= nil and user_setting(MOD_SETTINGS.TEAM_AMMO_METERS.save) then
-
+ 
 		local ui_renderer = self.ui_renderer
 		local input_service = self.input_manager:get_service("ingame_menu")
 		UIRenderer.begin_pass(ui_renderer, self.ui_scenegraph, input_service, dt, nil, self.render_settings)
-
+ 
 		if data._hudmod_ammo_value ~= nil then
 			local widget = self._ammo_widget
 			if not widget then
@@ -355,33 +355,33 @@ Mods.hook.set(mod_name, "UnitFrameUI.draw", function(orig_func, self, dt)
 
 			UIRenderer.draw_widget(ui_renderer, widget)
 		end
-
+ 
 		UIRenderer.end_pass(ui_renderer)
 	end
-
+ 
 	return orig_func(self, dt)
 end)
 
 --[[
 	Send/receive ammo updates over the network.
 --]]
-
+ 
 Mods.hook.set(mod_name, "GenericAmmoUserExtension.update", function(orig_func, self, unit, input, dt, context, t)
 	orig_func(self, unit, input, dt, context, t)
-
+ 
 	-- If this is the ammo extension for our ranged weapon, send our current ammo count to the
 	-- other players if their view of it is out of date. We send updates once per second at most,
 	-- so that fast-firing weapons dont cause rpc spam.
 	if self.slot_name == "slot_ranged" then
 		local current_ammo = self:total_remaining_ammo()
 		local last_ammo_time = self._hudmod_last_ammo_time
-
+ 
 		if self._hudmod_last_ammo_count ~= current_ammo and (not last_ammo_time or last_ammo_time + 1 < t) then
 			self._hudmod_last_ammo_count = current_ammo
 			self._hudmod_last_ammo_time = t
 			local network_manager = Managers.state.network
 			local unit_id = network_manager.unit_game_object_id(network_manager, self.owner_unit)
-
+ 
 			if Managers.player.is_server then
 				Mods.network.send_rpc_clients(RPC_HUDMOD_AMMO_UPDATE, unit_id, current_ammo)
 			else
@@ -394,7 +394,7 @@ Mods.hook.set(mod_name, "GenericAmmoUserExtension.update", function(orig_func, s
 		end
 	end
 end)
-
+ 
 -- Required RPC update when equipment is added that GenericAmmoUserExtension.update does not cover.
 Mods.hook.set(mod_name, "SimpleInventoryExtension.add_equipment",
 function(func, self, slot_name, item_data, unit_template, extra_extension_data, ammo_percent)
@@ -405,7 +405,7 @@ function(func, self, slot_name, item_data, unit_template, extra_extension_data, 
 		local slot_data = self.get_slot_data(self, slot_name)
 		local item_template = BackendUtils.get_item_template(item_data)
 		local ammo_data = item_template.ammo_data
-
+ 
 		if ammo_data and unit_id then
 			local ammo_extn = get_ammo_extension(slot_data)
 			if ammo_extn then
@@ -413,7 +413,7 @@ function(func, self, slot_name, item_data, unit_template, extra_extension_data, 
 				if ammo_percent ~= nil then
 					current_ammo = math.ceil(ammo_extn.max_ammo * ammo_percent)
 				end
-
+ 
 				if Managers.player.is_server then
 					Mods.network.send_rpc_clients(RPC_HUDMOD_AMMO_UPDATE, unit_id, current_ammo)
 				else
@@ -427,7 +427,7 @@ function(func, self, slot_name, item_data, unit_template, extra_extension_data, 
 		end
 	end
 end)
-
+ 
 Mods.hook.set(mod_name, "PlayerManager.assign_unit_ownership",
 function(func, self, unit, player, is_player_unit)
 	func(self, unit, player, is_player_unit)
@@ -440,7 +440,7 @@ function(func, self, unit, player, is_player_unit)
 		local item_data = slot_data.item_data
 		local item_template = BackendUtils.get_item_template(item_data)
 		local ammo_data = item_template.ammo_data
-
+ 
 		if ammo_data then
 			local ammo_extn = get_ammo_extension(slot_data)
 			if ammo_extn then
@@ -458,12 +458,12 @@ function(func, self, unit, player, is_player_unit)
 		end
 	end
 end)
-
+ 
 -- Allows easy access to a table of all unit frames.
 UnitFramesHandler._get_unit_frames = function (self)
 	return self._unit_frames
 end
-
+ 
 -- Request all ammo status when joining game in progress
 Mods.hook.set(mod_name, "StateInGameRunning.event_game_started", function(func, ...)
 	func(...)
@@ -475,7 +475,7 @@ Mods.hook.set(mod_name, "StateInGameRunning.event_game_started", function(func, 
 		end
 	end
 end)
-
+ 
 Mods.network.register(RPC_HUDMOD_REQUEST_AMMO_UPDATE, function(sender_id, string)
 	local network_manager = Managers.state.network
 
@@ -502,7 +502,7 @@ Mods.network.register(RPC_HUDMOD_REQUEST_AMMO_UPDATE, function(sender_id, string
 		end
 	end
 end)
-
+ 
 Mods.network.register(RPC_HUDMOD_AMMO_UPDATE, function(sender_id, unit_id, ammo_count)
 	local status, err = pcall(on_rpc_ammo_update, sender_id, unit_id, ammo_count)
 	if err ~= nil then
@@ -520,7 +520,7 @@ local function create_options()
 	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.TEAM_AMMO_METERS)
 	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.TEAM_AMMO_METERS_NOTCH)
 end
-
+ 
 local status, err = pcall(create_options)
 if err ~= nil then
 	EchoConsole(err)

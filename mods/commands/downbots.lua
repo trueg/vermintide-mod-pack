@@ -6,7 +6,7 @@ if round_started then
 	return
 end
 
-for i, player in pairs(Managers.player:bots()) do
+for i, player in pairs(Managers.player:bots()) do 
 
 	local player_unit = Managers.player:player_from_peer_id(Network.peer_id()).player_unit
 

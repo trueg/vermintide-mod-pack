@@ -1,6 +1,6 @@
 --[[
 	author: grasmann
-
+	
 	Mods.gui
 		- Provides a screen gui and functionality to draw to it
 --]]
@@ -42,7 +42,7 @@ Mods.gui.create_screen_ui = function()
 			--"material", "materials/ui/ui_1080p_ingame",
 			--"material", "materials/ui/ui_1080p_ingame_inn",
 			"material", "materials/ui/ui_1080p_ingame_common")
-			-- "material", "materials/ui/ui_1080p_popup"
+			-- "material", "materials/ui/ui_1080p_popup"	
 	end
 end
 
@@ -166,7 +166,7 @@ end
 Mods.gui.tooltip = function(str, colors, font_size, line_padding, offset, padding, font_material, size)
 	safe_pcall(function()
 		-- Create default colors if nil
-		colors = colors or
+		colors = colors or 
 			{Colors.get_color_table_with_alpha("cheeseburger", 255),
 			Colors.get_color_table_with_alpha("white", 255),}
 		-- Get mouse position
@@ -215,7 +215,7 @@ end
 	Draw mission icon
 	Parameters:
 		1) vector3:position, string:text, vector2:text_offset, color:color, [vector2:size, int:font_size, string:font]
-
+		
 		text_offset:
 		By default the text will be placed to the right of the icon up half its size
 		The offset if set will be calculated from the middle of the icon
@@ -245,7 +245,7 @@ end
 Mods.gui.tome_icon = function(position, color, size)
 	local icon_texture = "consumables_book_lit"
 	local icon_settings = UIAtlasHelper.get_atlas_settings_by_texture_name(icon_texture)
-
+	
 	local atlas = "gui_generic_icons_atlas"
 	local size = size or Vector2(icon_settings.size[1], icon_settings.size[2])
 	local color = color or Color(255, 255, 255, 255)

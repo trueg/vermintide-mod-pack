@@ -8,11 +8,11 @@ local check_time = 0
 Mods.hook.set(mod_name, "MatchmakingManager.update", function(func, self, dt, t)
 	-- Call orginal function
 	func(self, dt, t)
-
+	
 	if Managers.player.is_server then -- can only ban when server
 		if t - check_time > 1 then -- check once ever second to ban
 			Mods.ban.check_players()
-
+		
 			check_time = t
 		end
 	end
@@ -78,7 +78,7 @@ Mods.hook.set(mod_name, "MatchmakingManager.rpc_matchmaking_request_join_lobby",
 
 	return
 end)
-
+ 
 function is_kicked(peer_id)
 	if Mods.ban.kicked.peer_id and Mods.ban.kicked.peer_id == tostring(peer_id) and Mods.ban.kicked.kicking_time and Managers.state.network:network_time() - Mods.ban.kicked.kicking_time > 3 then
 		Mods.ban.kicked.kicking_time = nil
@@ -86,9 +86,9 @@ function is_kicked(peer_id)
 	end
 	return false
 end
-
+ 
 local new_connections = {}
-
+ 
 -- added "or is_kicked(peer_id)" and commented out the ch_printf
 Mods.hook.set(mod_name, "ConnectionHandler.update", function(func, self, dt)
 
@@ -166,7 +166,7 @@ Mods.hook.set(mod_name, "ConnectionHandler.update", function(func, self, dt)
 				-- ch_printf("Peer %q is now broken.", peer_id)
 				self.update_peer(self, peer_id, PeerConnectionState.Broken)
 			end
-
+ 
 			num_broken_connections = num_broken_connections + 1
 			broken_connections[num_broken_connections] = peer_id
 			current_connections[peer_id] = nil
@@ -193,9 +193,9 @@ Mods.hook.set(mod_name, "IngamePlayerListUI.update", function(func, self, dt)
 	-- Call orginal function
 	func(self, dt)
 
-	-- Kick
+	-- Kick    
 	if self.active then
-		local players = self.players
+		local players = self.players       
 		if Managers.player.is_server then -- can only kick when server
 			for i, player in ipairs(players) do
 				if player.peer_id ~= Network.peer_id() then -- can't kick yourself

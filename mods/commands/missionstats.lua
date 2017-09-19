@@ -1,8 +1,8 @@
 --[[
 	author: Aussiemon
-
+ 
 	-----
-
+ 
 	Copyright 2017 Aussiemon
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -10,9 +10,9 @@
 	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ 
 	-----
-
+ 
 	Reports number of completed attempts for each level.
 --]]
 
@@ -700,7 +700,7 @@ StatPopups._old_ui_frame_widget = StatPopups._old_ui_frame_widget or nil
 StatPopups.must_resize = function()
 
 	local screen_w, screen_h = UIResolution()
-
+	
 	if screen_h > 1200 and not mod.hd_ui_scaling_enabled then
 		return true
 	else
@@ -710,13 +710,13 @@ end
 
 -- Display the statistic's popup
 StatPopups.create_popup = function(title, output_string)
-
+	
 	-- Prevent popup from stacking on an existing popup
 	local popup_manager = Managers.popup
 	if popup_manager.has_popup(popup_manager) or ShowCursorStack.stack_depth > 0 then
 		return
 	end
-
+	
 	-- Start closing chat window and transfer input
 	local chat_manager = Managers.chat
 	local chat_gui = chat_manager.chat_gui
@@ -728,12 +728,12 @@ StatPopups.create_popup = function(title, output_string)
 	chat_gui:set_menu_transition_fraction(0)
 	chat_gui:_set_chat_window_alpha(1)
 	chat_gui.tab_widget.style.button_notification.color[1] = UISettings.chat.tab_notification_alpha_1
-
+	
 	-- Change scenegraph definition and frame widget in popup handler
 	local popup_handler = popup_manager._handler
 	StatPopups._old_ui_scenegraph = StatPopups._old_ui_scenegraph or popup_handler.ui_scenegraph
 	StatPopups._old_ui_frame_widget = StatPopups._old_ui_frame_widget or popup_handler.frame_widget
-
+	
 	-- Choose definition based upon current resolution
 	local must_resize = StatPopups.must_resize()
 	if not must_resize then
@@ -743,10 +743,10 @@ StatPopups.create_popup = function(title, output_string)
 		StatPopups._ui_scenegraph = UISceneGraph.init_scenegraph(StatPopups.scenegraph_definition_hd)
 		StatPopups._ui_frame_widget = UIWidget.init(StatPopups.frame_widget_definition_hd)
 	end
-
+	
 	popup_handler.ui_scenegraph = StatPopups._ui_scenegraph
 	popup_handler.frame_widget = StatPopups._ui_frame_widget
-
+	
 	-- Initialize simple popup manager if necessary
 	if not Managers.simple_popup then
 		Managers.simple_popup = SimplePopup:new()
@@ -755,7 +755,7 @@ StatPopups.create_popup = function(title, output_string)
 	-- Display popup
 	local simple_popup = Managers.simple_popup
 	simple_popup.queue_popup(simple_popup, output_string, title, "accept", "Close")
-
+	
 	-- Resize text
 	local n_popups = popup_handler.n_popups
 	local popup = popup_handler.popups[n_popups]
@@ -818,67 +818,67 @@ safe_pcall(function()
 
 	local total_completed = 0
 	local user_name = ""
-
+	
 	-- ############## Begin String Format ########################
 
 	output_string = output_string .. "\n"
-
+	
 	local line_count = 0
 	local total_count = 0
 	local stored_survival_lines = ""
 
 	-- Get listing for each level
 	for _, level_name in pairs(StatPopups.LevelKeyArray) do
-
+	
 		line_count = line_count + 1
 		total_count = total_count + 1
 
 		local translated_name = StatPopups.LevelKeyLookups[level_name] or level_name
-
+		
 		-- If this is a Last Stand map, retrieve the prefix used in the stats database
 		local survival_level_name = nil
 		if StatPopups.SurvivalLevelPrefixes[level_name] then
 			survival_level_name = StatPopups.SurvivalLevelPrefixes[level_name]
 		end
-
+		
 		-- Format statistics into a line to append to the total output
 		if survival_level_name then
-
+		
 			-- Last Stand mission
 			local this_total_kills = nil
 			local this_veteran_waves = nil
 			local this_champion_waves = nil
 			local this_heroic_waves = nil
-
-			this_total_kills =
-				stat_db.get_persistent_stat(stat_db, stats_id, ("survival_dlc_survival_" .. survival_level_name .. "_survival_hard_kills"))
-				+ stat_db.get_persistent_stat(stat_db, stats_id, ("survival_dlc_survival_" .. survival_level_name .. "_survival_harder_kills"))
+			
+			this_total_kills = 
+				stat_db.get_persistent_stat(stat_db, stats_id, ("survival_dlc_survival_" .. survival_level_name .. "_survival_hard_kills")) 
+				+ stat_db.get_persistent_stat(stat_db, stats_id, ("survival_dlc_survival_" .. survival_level_name .. "_survival_harder_kills")) 
 				+ stat_db.get_persistent_stat(stat_db, stats_id, ("survival_dlc_survival_" .. survival_level_name .. "_survival_hardest_kills"))
-			this_veteran_waves =
-				stat_db.get_persistent_stat(stat_db, stats_id, ("survival_dlc_survival_" .. survival_level_name .. "_survival_hard_waves"))
+			this_veteran_waves = 
+				stat_db.get_persistent_stat(stat_db, stats_id, ("survival_dlc_survival_" .. survival_level_name .. "_survival_hard_waves")) 
 			this_champion_waves =
-				stat_db.get_persistent_stat(stat_db, stats_id, ("survival_dlc_survival_" .. survival_level_name .. "_survival_harder_waves"))
+				stat_db.get_persistent_stat(stat_db, stats_id, ("survival_dlc_survival_" .. survival_level_name .. "_survival_harder_waves")) 
 			this_heroic_waves =
 				stat_db.get_persistent_stat(stat_db, stats_id, ("survival_dlc_survival_" .. survival_level_name .. "_survival_hardest_waves"))
-
+				
 			line_count = line_count - 1
-
+		
 			-- Line is stored for printing after regular mission stats
 			stored_survival_lines = stored_survival_lines .. "\n" .. translated_name .. ": " .. (this_total_kills) .. " kills, (" .. this_veteran_waves .. ", " .. this_champion_waves .. ", " .. this_heroic_waves .. ") best waves"
 		else
-
+		
 			-- Regular mission
 			local this_completion = stat_db.get_persistent_stat(stat_db, stats_id, "completed_levels", level_name) or 0
 			total_completed = total_completed + this_completion
-
+			
 			if line_count > 3 then
 				line_count = 1
 				output_string = output_string .. "\n"
 			end
-
+			
 			-- Line is appended immediately
 			output_string = output_string .. translated_name .. ": " .. (this_completion)
-
+			
 			if line_count < 3 and total_count ~= (#StatPopups.LevelKeyArray - StatPopups.SurvivalLevelPrefixes.length) then
 				output_string = output_string .. ",  "
 			end
@@ -886,18 +886,18 @@ safe_pcall(function()
 	end
 
 	local total_badges = stat_db.get_persistent_stat(stat_db, stats_id, "endurance_badges")
-
+	
 	-- Re-add Last Stand lines
 	output_string = output_string .. stored_survival_lines
-
+	
 	-- Finalize
 	output_string = output_string .. "\n" .. "Total Completions: " .. total_completed
 	output_string = output_string .. "\n" .. "Total Endurance Badges: " .. total_badges
-
+	
 	-- ############## End String Format ########################
-
+	
 	StatPopups.create_popup("Mission Stats", output_string)
-
+	
 end)
 
 -- ##########################################################

@@ -13,7 +13,7 @@ pcall(function()
 		if value > 5 then value = 1 end
 		Application.set_user_setting(EnemyHealthBars.SETTINGS.ACTIVE.save, value)
 		Application.save_user_settings()
-
+		
 		if Application.user_setting(EnemyHealthBars.SETTINGS.ACTIVE.save) == 1 then
 			EchoConsole("Enemy Health Bars: Off")
 		elseif Application.user_setting(EnemyHealthBars.SETTINGS.ACTIVE.save) == 2 then

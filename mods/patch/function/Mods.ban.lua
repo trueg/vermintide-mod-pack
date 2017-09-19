@@ -1,8 +1,8 @@
 Mods.ban = {
 	filename = "Ban_list",
-
+	
 	list = {},
-
+	
 	-- Last player kicked
 	kicked = {
 		peer_id = "",
@@ -22,13 +22,13 @@ Mods.ban.add_player = function(peer_id, name)
 	if peer_id ~= Network.peer_id() then -- can't ban yourself
 		if not Mods.ban.exist(peer_id) then -- can't ban players twice
 			local ban_player = table.clone(ban_player_template)
-
+			
 			ban_player.peer_id = tostring(peer_id)
 			ban_player.name = name
-
+			
 			-- insert player into ban list
 			table.insert(Mods.ban.list, ban_player)
-
+			
 			-- Save Ban list
 			Mods.ban.save()
 		end
@@ -44,7 +44,7 @@ Mods.ban.exist = function(peer_id)
 			return true
 		end
 	end
-
+	
 	return false
 end
 
@@ -53,18 +53,18 @@ end
 --
 Mods.ban.save = function()
 	local file_path = "mods/patch/storage/" .. Mods.ban.filename .. ".lua"
-
+	
 	local file = io.open(file_path, "w+")
 	if file ~= nil then
 		file:write("Mods.ban.list = {\n")
-
+		
 		for _, player in ipairs(Mods.ban.list) do
 			file:write("	{\n")
 			file:write("		peer_id = \"" .. player.peer_id .. "\",\n")
 			file:write("		name = \"" .. player.name .. "\",\n")
 			file:write("	},\n")
 		end
-
+		
 		file:write("}\n")
 		file:close()
 	end
@@ -82,7 +82,7 @@ end
 --
 Mods.ban.check_players = function()
 	local human_players = Managers.player:human_players()
-
+		
 	for _, player in pairs(human_players) do
 		for _, ban_player in ipairs(Mods.ban.list) do
 			if ban_player.peer_id == tostring(player.peer_id) then

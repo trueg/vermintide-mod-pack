@@ -1,22 +1,22 @@
 ﻿--[[
 	Author: grasmann
-
+	
 	Injects custom options into menus
 --]]
 local mod_name = "OptionsInjector"
 
 OptionsInjector = {
-
+	
 	initialized = false,
-
+	
 	CHECKBOX_SIZE = {36, 36},
 	WIDGET_SIZE = {1315, 50},
-
+	
 	modifiers = {},
 	widgets = {},
 	keybind = {},
 	dynamic = {},
-
+	
 	ModSettings = {
 		view = {},
 		offset = {
@@ -29,7 +29,7 @@ OptionsInjector = {
 		name = "Mod",
 		is_open = false,
 	},
-
+	
 	DynamicText = {
 		{
 			name = "dyn_local_player",
@@ -41,7 +41,7 @@ OptionsInjector = {
 			end
 		},
 	},
-
+	
 	key_modifiers = {
 		NONE = 1,
 		CTRL = 2,
@@ -51,7 +51,7 @@ OptionsInjector = {
 		CTRL_ALT = 6,
 		SHIFT_ALT = 7,
 	},
-
+	
 }
 local me = OptionsInjector
 local get = Application.user_setting
@@ -64,11 +64,11 @@ local save = Application.save_user_settings
 --[[
 	Create stepper widget
 --]]
-OptionsInjector.stepper_widget = function(name, text, options, selected_option, tooltip_text, hide_options, dynamic)
+OptionsInjector.stepper_widget = function(name, text, options, selected_option, tooltip_text, hide_options, dynamic)		
 	local widget = me.widgets.stepper(text, options, selected_option, tooltip_text, name, hide_options, dynamic)
-
+	
 	me.add_to_cache(widget)
-
+	
 	return widget
 end
 OptionsInjector.CreateStepperWidget = OptionsInjector.stepper_widget
@@ -77,9 +77,9 @@ OptionsInjector.CreateStepperWidget = OptionsInjector.stepper_widget
 --]]
 OptionsInjector.checkbox_widget = function(name, text, default_value, hide_options, dynamic, tooltip_text)
 	local widget = me.widgets.checkbox(name, text, default_value, hide_options, dynamic, tooltip_text)
-
+	
 	me.add_to_cache(widget)
-
+	
 	return widget
 end
 OptionsInjector.CreateCheckBoxWidget = OptionsInjector.checkbox_widget
@@ -88,9 +88,9 @@ OptionsInjector.CreateCheckBoxWidget = OptionsInjector.checkbox_widget
 --]]
 OptionsInjector.dropdown_checkbox_widget = function(name, text, default_value, hide_options, dynamic, tooltip_text)
 	local widget = me.widgets.dropdown_checkbox(name, text, default_value, hide_options, dynamic, tooltip_text)
-
+	
 	me.add_to_cache(widget)
-
+	
 	return widget
 end
 OptionsInjector.CreateDropDownCheckBoxWidget = OptionsInjector.dropdown_checkbox_widget
@@ -99,9 +99,9 @@ OptionsInjector.CreateDropDownCheckBoxWidget = OptionsInjector.dropdown_checkbox
 --]]
 OptionsInjector.slider_widget = function(name, text, tooltip_text, values, default_value, dynamic)
 	local widget = me.widgets.slider(name, text, tooltip_text, values, default_value, dynamic)
-
+	
 	me.add_to_cache(widget)
-
+	
 	return widget
 end
 OptionsInjector.CreateSliderWidget = OptionsInjector.slider_widget
@@ -110,9 +110,9 @@ OptionsInjector.CreateSliderWidget = OptionsInjector.slider_widget
 --]]
 OptionsInjector.dropdown_widget = function(name, text, options, selected_option, tooltip_text, hide_options, dynamic)
 	local widget = me.widgets.drop_down(text, options, selected_option, tooltip_text, name, hide_options, dynamic)
-
+	
 	me.add_to_cache(widget)
-
+	
 	return widget
 end
 OptionsInjector.CreateDropDownWidget = OptionsInjector.dropdown_widget
@@ -126,7 +126,7 @@ OptionsInjector.keybind_widget = function(name, text, selected_key, default_valu
 	widget.content.script = script
 	me.add_to_cache(widget)
 	me.keybind.init(name, selected_key, nil, modifiers, folder, script)
-
+	
 	return widget
 end
 OptionsInjector.CreateKeybindWidget = OptionsInjector.keybind_widget
@@ -175,7 +175,7 @@ end)
 	Init OptionsInjector
 --]]
 OptionsInjector.init = function(options_view)
-
+	
 	if not OptionsInjector.initialized and options_view ~= nil then
 		me.create_mod_settings_button(options_view)
 
@@ -185,12 +185,12 @@ OptionsInjector.init = function(options_view)
 		options_view.settings_lists.mod_settings.max_offset_y = -762
 
 		me.initialized = true
-
+		
 		-- ##### Load cached options ##################################################################################
 		for __, widget in pairs(me.ModSettings.cache) do
 			me.add_to_menu(widget)
-		end
-
+		end	
+		
 		return true
 	end
 	return false
@@ -286,21 +286,21 @@ end
 --[[
 	Indent child widgets
 --]]
-OptionsInjector.widgets.indent_childs = function(widget)
+OptionsInjector.widgets.indent_childs = function(widget)	
 	if widget.content.hide_options ~= nil then
-
+		
 		for _, hide_option in pairs(widget.content.hide_options) do
-
+		
 			for _, name in pairs(hide_option.options) do
 				local w = me.widgets.by_name(name)
 				if w ~= nil and w.style.text ~= nil and not w.skip_visible then
 					w.style.text.offset[1] = widget.style.text.offset[1] + 50
 				end
 			end
-
+		
 		end
-
-	end
+		
+	end	
 end
 --[[
 	Set widget offsets
@@ -323,7 +323,7 @@ OptionsInjector.widgets.update = function(options_view)
 	local visible_n = me.widgets.visible_widgets()
 	settings.view.visible_widgets_n = visible_n
 	settings.view.max_offset_y = (visible_n * 50) - 750 --762 + 25
-
+	
 	-- If current menu is mod settings
 	--if options_view.selected_settings_list ~= nil and settings.view == options_view.selected_settings_list then
 		-- if not settings.is_open then
@@ -340,12 +340,12 @@ OptionsInjector.widgets.update = function(options_view)
 	-- else
 		-- settings.is_open = false
 	-- end
-
+	
 	-- Handle scrollbar
 	if settings.view.visible_widgets_n >= 16 then
 		settings.view.scrollbar = true
-		settings.view.visible_widgets_n = 16
-	else
+		settings.view.visible_widgets_n = 16		
+	else		
 		options_view.set_scrollbar_value(options_view, 0)
 		if settings.view.scrollbar then
 			options_view.set_scrollbar_value(options_view, 0)
@@ -353,7 +353,7 @@ OptionsInjector.widgets.update = function(options_view)
 			settings.view.scrollbar = false
 		end
 	end
-
+	
 end
 --[[
 	Check widget visibility
@@ -367,8 +367,8 @@ end
 OptionsInjector.widgets.set_visible = function(widget, visible)
 	if not visible then
 		widget.offx = widget.offx or widget.style.offset[1]
-		widget.style.offset[1] = 2000
-
+		widget.style.offset[1] = 2000		
+		
 		local modifier = widget.content.modifier
 		if modifier then
 			modifier.offx = modifier.offx or modifier.style.offset[1]
@@ -378,9 +378,9 @@ OptionsInjector.widgets.set_visible = function(widget, visible)
 			--widget.content.callback(widget.content)
 		--end
 		if widget.content.hide_options ~= nil then
-
+			
 			for _, hide_option in pairs(widget.content.hide_options) do
-
+			
 				for _, name in pairs(hide_option.options) do
 					local hide_widget = me.widgets.by_name(name)
 					if hide_widget ~= nil then
@@ -388,25 +388,25 @@ OptionsInjector.widgets.set_visible = function(widget, visible)
 						me.widgets.set_visible(hide_widget, false)
 					end
 				end
-
+			
 			end
-
+			
 			me.widgets.set_offsets()
 		end
-	else
+	else		
 		widget.style.offset[1] = widget.offx
 		widget.offx = nil
-
+		
 		local modifier = widget.content.modifier
 		if modifier then
 			modifier.style.offset[1] = modifier.offx
 			modifier.offx = nil
 		end
-
+		
 		if widget.content.hide_options ~= nil then
 			widget.content.callback(widget.content)
 		end
-	end
+	end	
 end
 --[[
 	Get widget by name
@@ -449,7 +449,7 @@ OptionsInjector.widgets.on_change = function(content, setting_value)
 		if me.widgets.visible(me.widgets.by_name(content.name)) then
 			local settings = me.ModSettings
 			local hide_options = content.hide_options
-
+			
 			for _, hide_option in pairs(hide_options) do
 				local value = hide_option[1]
 				local show = hide_option.mode == "show"
@@ -464,7 +464,7 @@ OptionsInjector.widgets.on_change = function(content, setting_value)
 					end
 				end
 			end
-
+			
 		end
 	end
 	me.widgets.set_offsets()
@@ -488,7 +488,7 @@ OptionsInjector.widgets.set_offset = function(widget)
 	else
 		local index = me.widgets.visible_index(widget)
 		local size = -50
-		if index ~= nil and index > 1 then
+		if index ~= nil and index > 1 then	
 			local value = index * size
 			for _, style in pairs(widget.style) do
 				if style.offset ~= nil then
@@ -497,7 +497,7 @@ OptionsInjector.widgets.set_offset = function(widget)
 				end
 			end
 			widget.style.offset[2] = value
-		end
+		end	
 	end
 end
 -- ##### Create Widgets ###############################################################################################
@@ -505,16 +505,16 @@ end
 	Create stepper
 --]]
 OptionsInjector.widgets.stepper = function(text, options, selected_option, tooltip_text, name, hide_options, dynamic)
-
+	
 	local options_view_definitions = package.loaded["scripts/ui/views/options_view_definitions"]
-	local definition = options_view_definitions.create_stepper_widget(text, options, selected_option, tooltip_text,
+	local definition = options_view_definitions.create_stepper_widget(text, options, selected_option, tooltip_text, 
 		me.ModSettings.list_start, me.ModSettings.offset.value)
-
+	
 	-- ##### widget ###################################################################################################
 	definition.name = name
 	definition.type = "stepper"
-	definition.ui_animations = {}
-
+	definition.ui_animations = {}	
+	
 	-- ##### content ##################################################################################################
 	definition.content.name = name
 	definition.content.hide_options = hide_options
@@ -548,11 +548,11 @@ OptionsInjector.widgets.stepper = function(text, options, selected_option, toolt
 	definition.content.right_hotspot.disable_button = false
 	definition.content.left_hotspot.parent = definition.content
 	definition.content.left_hotspot.disable_button = false
-
+	
 	-- ##### Style #####
 	definition.style.text.localize = false
 	definition.style.tooltip_text.localize = false
-
+	
 	return definition
 end
 --[[
@@ -561,14 +561,14 @@ end
 OptionsInjector.widgets.checkbox = function(name, text, default_value, hide_options, dynamic, tooltip_text)
 	local settings = me.ModSettings
 	local options_view_definitions = package.loaded["scripts/ui/views/options_view_definitions"]
-	local definition = options_view_definitions.create_checkbox_widget(text, settings.list_start,
+	local definition = options_view_definitions.create_checkbox_widget(text, settings.list_start, 
 		settings.offset.value)
-
+	
 	-- ##### widget ###################################################################################################
 	definition.name = name
 	definition.type = "checkbox"
 	definition.ui_animations = {}
-
+	
 	-- -- ##### content ##################################################################################################
 	--definition.content.visible = true
 	definition.content.name = name
@@ -578,7 +578,7 @@ OptionsInjector.widgets.checkbox = function(name, text, default_value, hide_opti
 	definition.content.saved_value_cb = function(widget)
 		widget.content.flag = get(widget.content.name)
 		me.widgets.on_change(widget.content, widget.content.flag)
-	end
+	end	
 	definition.content.on_pressed_callback = function()
 	end
 	definition.content.on_hover_enter_callback = function()
@@ -595,7 +595,7 @@ OptionsInjector.widgets.checkbox = function(name, text, default_value, hide_opti
 	definition.content.hotspot.disable_button = false
 	definition.content.highlight_hotspot.parent = definition.content
 	definition.content.highlight_hotspot.disable_button = false
-
+	
 	-- ##### Style #####
 	definition.style.text.localize = false
 	definition.style.size = table.clone(me.WIDGET_SIZE)
@@ -652,7 +652,7 @@ OptionsInjector.widgets.dropdown_checkbox = function(name, text, default_value, 
 
 	widget.element.passes[5].content_check_function = function() return false end -- hide the checkbox
 
-	local dropdown_pass =
+	local dropdown_pass = 
 		{
 			pass_type = "rotated_texture",
 			style_id = "arrow",
@@ -704,15 +704,15 @@ end
 OptionsInjector.widgets.slider = function(name, text, tooltip_text, values, default_value, dynamic)
 	local options_view_definitions = package.loaded["scripts/ui/views/options_view_definitions"]
 	local slider_image = {size = {0, 0}, masked = true, offset = {0, 0, 0}}
-	local definition = options_view_definitions.create_slider_widget(text, tooltip_text,
+	local definition = options_view_definitions.create_slider_widget(text, tooltip_text, 
 		me.ModSettings.list_start, me.ModSettings.offset.value, slider_image)
 	me.ModSettings.offset.value[2] = me.ModSettings.offset.value[2] + me.WIDGET_SIZE[2]
-
+	
 	-- ##### widget ###################################################################################################
 	definition.name = name
 	definition.type = "slider"
 	definition.ui_animations = {}
-
+	
 	-- ##### content ##################################################################################################
 	--definition.content.visible = true
 	definition.content.name = name
@@ -734,33 +734,33 @@ OptionsInjector.widgets.slider = function(name, text, tooltip_text, values, defa
 		local options_view = Managers.player.network_manager.matchmaking_manager.matchmaking_ui.ingame_ui.views.options_view
 		options_view.changed_user_settings[content.name] = content.value
 	end
-
+	
 	-- ##### Set references ########################################################################################
 	definition.content.hotspot.parent = definition.content
 	definition.content.hotspot.disable_button = false
 	definition.content.highlight_hotspot.parent = definition.content
 	definition.content.highlight_hotspot.disable_button = false
-
+	
 	-- ##### Style #####
 	definition.style.text.localize = false
 	definition.style.tooltip_text.localize = false
-
+	
 	return definition
 
 end
 --[[
 	Create dropdown
 --]]
-OptionsInjector.widgets.drop_down = function(text, options, selected_option, tooltip_text, name, hide_options, dynamic)
+OptionsInjector.widgets.drop_down = function(text, options, selected_option, tooltip_text, name, hide_options, dynamic)	
 	local options_view_definitions = package.loaded["scripts/ui/views/options_view_definitions"]
-	local definition = options_view_definitions.create_drop_down_widget(text, options, selected_option, tooltip_text,
+	local definition = options_view_definitions.create_drop_down_widget(text, options, selected_option, tooltip_text, 
 		me.ModSettings.list_start, me.ModSettings.offset.value)
-
+	
 	-- ##### widget ###################################################################################################
 	definition.name = name
 	definition.type = "drop_down"
 	definition.ui_animations = {}
-
+	
 	-- ##### content ##################################################################################################
 	definition.content.name = name
 	definition.content.hide_options = hide_options
@@ -786,17 +786,17 @@ OptionsInjector.widgets.drop_down = function(text, options, selected_option, too
 		options_view.changed_user_settings[content.name] = content.options_values[content.current_selection]
 		me.widgets.on_change(content, content.options_values[content.current_selection])
 	end
-
+	
 	-- ##### Set references ###########################################################################################
 	definition.content.hotspot.parent = definition.content
 	definition.content.hotspot.disable_button = false
 	definition.content.highlight_hotspot.parent = definition.content
 	definition.content.highlight_hotspot.disable_button = false
-
+	
 	-- ##### Style #####
 	definition.style.text.localize = false
 	definition.style.tooltip_text.localize = false
-
+	
 	return definition
 end
 --[[
@@ -804,14 +804,14 @@ end
 --]]
 OptionsInjector.widgets.texture = function(texture, texture_size)
 	local options_view_definitions = package.loaded["scripts/ui/views/options_view_definitions"]
-	local definition = options_view_definitions.create_simple_texture_widget(texture, texture_size,
+	local definition = options_view_definitions.create_simple_texture_widget(texture, texture_size, 
 		me.ModSettings.list_start, me.ModSettings.offset.value)
-
+	
 	-- ##### widget ###################################################################################################
 	definition.type = "image"
 	definition.ui_animations = {}
 	definition.name = "seperator"
-
+	
 	-- ##### content ##################################################################################################
 	definition.content.name = "seperator"
 	definition.content.saved_value_cb = function()
@@ -820,11 +820,11 @@ OptionsInjector.widgets.texture = function(texture, texture_size)
 	end
 	definition.content.on_hover_enter_callback = function()
 	end
-	definition.content.on_hover_exit_callback = function()
+	definition.content.on_hover_exit_callback = function()	
 	end
 	definition.content.callback = function()
 	end
-
+	
 	-- ##### Style ####################################################################################################
 	definition.style.texture_id.color = Colors.get_color_table_with_alpha("cheeseburger", 255)
 
@@ -841,9 +841,9 @@ OptionsInjector.widgets.keybind = function(name, text, selected_key, default_val
 	}
 
 	local options_view_definitions = package.loaded["scripts/ui/views/options_view_definitions"]
-	local definition = options_view_definitions.create_keybind_widget(selected_key, keys, actions_info,
+	local definition = options_view_definitions.create_keybind_widget(selected_key, keys, actions_info, 
 		me.ModSettings.list_start, me.ModSettings.offset.value)
-
+	
 	-- ##### widget ###################################################################################################
 	definition.name = name
 	definition.type = "keybind"
@@ -864,7 +864,7 @@ OptionsInjector.widgets.keybind = function(name, text, selected_key, default_val
 		widget.content.selected_key = get(widget.content.name) or default_value
 		if widget.content.modifier then
 			local child = widget.content.modifier.content
-			me.keybind.init(widget.content.name, widget.content.selected_key, nil, child.options_values[child.current_selection],
+			me.keybind.init(widget.content.name, widget.content.selected_key, nil, child.options_values[child.current_selection], 
 				widget.content.folder, widget.content.script)
 		end
 	end
@@ -876,7 +876,7 @@ OptionsInjector.widgets.keybind = function(name, text, selected_key, default_val
 		if not table.has_item(blocked, new_key) then
 			local actions_info = content.actions_info
 			local options_view = Managers.player.network_manager.matchmaking_manager.matchmaking_ui.ingame_ui.views.options_view
-
+			
 			local button_locale_name = string.lower(me.keybind.key_name(device, new_key))
 			-- if device == "keyboard" then
 				-- local button_index = Keyboard.button_index(new_key)
@@ -896,18 +896,18 @@ OptionsInjector.widgets.keybind = function(name, text, selected_key, default_val
 			--me.keybind.init(content.name, content.selected_key)
 			if content.modifier then
 				local child = content.modifier.content
-				me.keybind.init(content.name, button_locale_name, device, child.options_values[child.current_selection],
+				me.keybind.init(content.name, button_locale_name, device, child.options_values[child.current_selection], 
 					content.folder, content.script)
 			end
 		end
 	end
-
+	
 	-- ##### Set references ###########################################################################################
 	definition.content.hotspot.parent = definition.content
 	definition.content.hotspot.disable_button = false
 	definition.content.highlight_hotspot.parent = definition.content
 	definition.content.highlight_hotspot.disable_button = false
-
+	
 	-- ##### Style #####
 	definition.style.text.localize = false
 
@@ -965,17 +965,17 @@ OptionsInjector.keybind.modifier = function(widget, modifiers)
 		drop_down.style.selected_bg.size[1] = 120
 		drop_down.style.disabled_texture.offset[1] = base_offset_x + 120
 		drop_down.style.disabled_texture.size[1] = 150
-
+		
 		drop_down.content.callback = function(content)
 			local options_view = Managers.player.network_manager.matchmaking_manager.matchmaking_ui.ingame_ui.views.options_view
 			options_view.changed_user_settings[content.name] = content.options_values[content.current_selection]
 			me.widgets.on_change(content, content.options_values[content.current_selection])
-
+			
 			local parent = content.parent_widget.content
 			me.keybind.init(parent.name, parent.selected_key, parent.device, content.options_values[content.current_selection],
 				parent.folder, parent.script)
 		end
-
+		
 		drop_down.content.saved_value_cb = function(widget)
 			for i=1, #widget.content.options_texts do
 				if widget.content.options_values[i] == get(widget.content.name) then
@@ -983,14 +983,14 @@ OptionsInjector.keybind.modifier = function(widget, modifiers)
 				end
 			end
 			me.widgets.on_change(widget.content, widget.content.options_values[widget.content.current_selection])
-
+			
 			local parent = widget.content.parent_widget.content
 			me.keybind.init(parent.name, parent.selected_key, parent.device, widget.content.options_values[widget.content.current_selection],
 				parent.folder, parent.script)
 		end
-
+		
 		widget.content.modifier = drop_down
-
+		
 		me.add_to_cache(drop_down)
 	else
 		-- Options
@@ -1006,7 +1006,7 @@ OptionsInjector.keybind.modifier = function(widget, modifiers)
 		--local drop_down = me.widgets.drop_down("Modifiers", table.clone(modifier_list), 1, "lol", widget.content.name .. "_modifiers")
 		--me.add_to_cache(drop_down)
 	end
-
+	
 end
 --[[
 	Convert modifiers to a string list
@@ -1058,7 +1058,7 @@ end
 --]]
 OptionsInjector.keybind.init = function(name, key, device, modifiers, folder, script)
 	local key = string.lower(key)
-
+	
 	-- Add to keymap
 	if string.find(key, "mouse") then
 		local mouse_key = string.sub(key, 7)
@@ -1074,7 +1074,7 @@ OptionsInjector.keybind.init = function(name, key, device, modifiers, folder, sc
 	-- Add to settings
 	local keys = me.keybind.convert_modifiers(modifiers)
 	keys[#keys+1] = name
-
+	
 	Mods.keyboard.add(keys, folder, script)
 end
 
@@ -1089,7 +1089,7 @@ OptionsInjector.create_mod_settings_button = function(options_view)
 	    orig_title_buttons_n = options_view.title_buttons_n
 	    rawset(_G, "_oi_orig_title_buttons_n", orig_title_buttons_n)
 	end
-
+	
 	local title_buttons_n = orig_title_buttons_n + 1
 	options_view.title_buttons_n = title_buttons_n
 
@@ -1166,23 +1166,23 @@ end
 OptionsInjector.CreateWidget = function(setting)
 	if setting and setting.widget_type then
 		local value = get(setting.save)
-
+		
 		if setting.widget_type == "stepper" then -- Stepper
 			-- Check save data
 			if type(value) ~= setting.value_type then
 				set(setting.save, setting.options[setting.default].value)
 				save()
 			end
-
+			
 			-- Create widget
 			return me.CreateStepperWidget(setting.save, setting.text, setting.options, setting.default, setting.tooltip, setting.hide_options)
 		elseif setting.widget_type == "slider" then -- Slider
 			-- Check save data
 			if type(value) ~= "number" or value < setting.range[1] or value > setting.range[2] then
-				set(setting.save, setting.default)
+				set(setting.save, setting.default)	
 				save()
 			end
-
+			
 			-- Create widget
 			return me.CreateSliderWidget(setting.save, setting.text, setting.tooltip, setting.range, setting.default)
 		elseif setting.widget_type == "checkbox" then -- CheckBox
@@ -1191,7 +1191,7 @@ OptionsInjector.CreateWidget = function(setting)
 				set(setting.save, setting.default)
 				save()
 			end
-
+			
 			-- Create widget
 			return me.CreateCheckBoxWidget(setting.save, setting.text, setting.default,
 				setting.hide_options, setting.dynamic, setting.tooltip)
@@ -1201,7 +1201,7 @@ OptionsInjector.CreateWidget = function(setting)
 				set(setting.save, setting.default)
 				save()
 			end
-
+			
 			-- Create widget
 			return me.CreateDropDownCheckBoxWidget(setting.save, setting.text, setting.default,
 				setting.hide_options, setting.dynamic, setting.tooltip)
@@ -1211,17 +1211,17 @@ OptionsInjector.CreateWidget = function(setting)
 				set(setting.save, setting.options[setting.default].value)
 				save()
 			end
-
+			
 			-- Create widget
 			return me.CreateDropDownWidget(setting.save, setting.text, setting.options, setting.default, setting.tooltip, setting.hide_options)
 		elseif setting.widget_type == "keybind" then -- Keybind
-
+			
 			return me.CreateKeybindWidget(setting.save, setting.text,
 				get(setting.save) or setting.default[1], setting.default[1],
 				get(setting.save .. "_modifiers") or setting.default[2],
 				setting.exec[1], setting.exec[2])
 		elseif setting.widget_type == "modless_keybind" then -- Keybind without modifier/executed file
-
+			
 			return me.add_to_cache(me.widgets.keybind(setting.save, setting.text, get(setting.save) or setting.default[1], setting.default[1]))
 		end
 	else

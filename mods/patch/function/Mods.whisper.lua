@@ -70,7 +70,7 @@ Mods.hook.set(mod_name, "ChatGui._update_chat_messages", function (func, self)
 	return show_new_messages
 end)
 
---[[
+--[[ 
 How to use :
 
 

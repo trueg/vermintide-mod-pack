@@ -4909,7 +4909,7 @@ TerrorEventBlueprints.survival_deathwish_bonus_wave = {
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
 			breed_name = "skaven_gutter_runner"
-		},
+		},	
 		{
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
@@ -4939,7 +4939,7 @@ TerrorEventBlueprints.survival_deathwish_bonus_wave = {
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
 			breed_name = "skaven_gutter_runner"
-		},
+		},	
 		{
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
@@ -4969,7 +4969,7 @@ TerrorEventBlueprints.survival_deathwish_bonus_wave = {
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
 			breed_name = "skaven_gutter_runner"
-		},
+		},	
 		{
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
@@ -4999,7 +4999,7 @@ TerrorEventBlueprints.survival_deathwish_bonus_wave = {
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
 			breed_name = "skaven_gutter_runner"
-		},
+		},	
 		{
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
@@ -5910,7 +5910,7 @@ if not slayertoken then
 				content.game_difficulty = "Deathwish Mutated Slayer's Oath"
 			elseif name == "Heroic" and deathwishtoken then
 				content.game_difficulty = "Deathwish Slayer's Oath"
-			elseif mutationtoken then
+			elseif mutationtoken then 
 				content.game_difficulty = name .. " Mutated Slayer's Oath"
 			else
 				content.game_difficulty = name .. " Slayer's Oath"
@@ -5920,7 +5920,7 @@ if not slayertoken then
 				content.game_difficulty = "Deathwish Mutated Onslaught"
 			elseif name == "Cataclysm" and deathwishtoken then
 				content.game_difficulty = "Deathwish Onslaught"
-			elseif mutationtoken then
+			elseif mutationtoken then 
 				content.game_difficulty = name .. " Mutated Onslaught"
 			else
 				content.game_difficulty = name .. " Onslaught"
@@ -5952,7 +5952,7 @@ if not slayertoken then
 				lobby_data.unique_server_name = "||DW MUTATED SLAYER'S OATH|| " .. string.sub(old_server_name,1,15)
 			elseif difficulty == "survival_hardest" and deathwishtoken then
 				lobby_data.unique_server_name = "||Deathwish Slayer's Oath|| " .. string.sub(old_server_name,1,17)
-			elseif mutationtoken then
+			elseif mutationtoken then 
 				lobby_data.unique_server_name = "||Mutated Slayer's Oath|| " .. string.sub(old_server_name,1,17)
 			else
 				lobby_data.unique_server_name = "||Slayer's Oath|| " .. string.sub(old_server_name,1,17)
@@ -5962,7 +5962,7 @@ if not slayertoken then
 				lobby_data.unique_server_name = "||DW MUTATED ONSLAUGHT|| " .. string.sub(old_server_name,1,17)
 			elseif difficulty == "hardest" and deathwishtoken then
 				lobby_data.unique_server_name = "||Deathwish Onslaught|| " .. string.sub(old_server_name,1,17)
-			elseif mutationtoken then
+			elseif mutationtoken then 
 				lobby_data.unique_server_name = "||Mutated Onslaught|| " .. string.sub(old_server_name,1,17)
 			else
 				lobby_data.unique_server_name = "||Onslaught|| " .. string.sub(old_server_name,1,17)
@@ -6003,7 +6003,7 @@ if not slayertoken then
 			lobby_data.unique_server_name = "||DW MUTATED SLAYER'S OATH|| " .. string.sub(old_server_name,1,15)
 		elseif lobby_data.difficulty == "survival_hardest" and deathwishtoken then
 			lobby_data.unique_server_name = "||Deathwish Slayer's Oath|| " .. string.sub(old_server_name,1,17)
-		elseif mutationtoken then
+		elseif mutationtoken then 
 			lobby_data.unique_server_name = "||Mutated Slayer's Oath|| " .. string.sub(old_server_name,1,17)
 		else
 			lobby_data.unique_server_name = "||Slayer's Oath|| " .. string.sub(old_server_name,1,17)
@@ -6013,7 +6013,7 @@ if not slayertoken then
 			lobby_data.unique_server_name = "||DW MUTATED ONSLAUGHT|| " .. string.sub(old_server_name,1,17)
 		elseif lobby_data.difficulty == "hardest" and deathwishtoken then
 			lobby_data.unique_server_name = "||Deathwish Onslaught|| " .. string.sub(old_server_name,1,17)
-		elseif mutationtoken then
+		elseif mutationtoken then 
 			lobby_data.unique_server_name = "||Mutated Onslaught|| " .. string.sub(old_server_name,1,17)
 		else
 			lobby_data.unique_server_name = "||Onslaught|| " .. string.sub(old_server_name,1,17)
@@ -6057,7 +6057,7 @@ if not slayertoken then
 
 		local original_member_func = Managers.chat.channels[1].members_func
 		Managers.chat.channels[1].members_func = member_func
-
+		
 		if (lobby_data.difficulty == "survival_hard" or lobby_data.difficulty == "survival_harder" or lobby_data.difficulty == "survival_hardest") and slayertoken then
 			if lobby_data.difficulty == "survival_hardest" and deathwishtoken and mutationtoken then
 				Mods.whisper.last_whisper = "[Automated message] This lobby has the following difficulty mod active : Slayer's Oath waveset, Deathwish difficulty, Stormvermin Mutation. Yeah, they're suicidal."
@@ -6079,7 +6079,7 @@ if not slayertoken then
 			elseif lobby_data.difficulty == "hardest" and deathwishtoken then
 				Mods.whisper.last_whisper = "[Automated message] This lobby has the following difficulty mod active : Onslaught, Deathwish difficulty. Die with honor, hero."
 				Managers.chat:send_system_chat_message(1, Mods.whisper.last_whisper, 0, true)
-			elseif mutationtoken then
+			elseif mutationtoken then 
 				Mods.whisper.last_whisper = "[Automated message] This lobby has the following difficulty mod active : Onslaught, Stormvermin Mutation."
 				Managers.chat:send_system_chat_message(1, Mods.whisper.last_whisper, 0, true)
 			else
@@ -6106,7 +6106,7 @@ if not slayertoken then
 
 	Mods.hook.front("Gamemodes", "MatchmakingManager.rpc_matchmaking_request_join_lobby")
 	--End whispers
-
+	
 	Managers.chat:send_system_chat_message(1, "Last Stand : Slayer's Oath waveset ENABLED.", 0, true)
 else
 	slayertoken = false
@@ -6125,7 +6125,7 @@ else
 			lobby_data.unique_server_name = "||DW MUTATED SLAYER'S OATH|| " .. string.sub(old_server_name,1,15)
 		elseif lobby_data.difficulty == "survival_hardest" and deathwishtoken then
 			lobby_data.unique_server_name = "||Deathwish Slayer's Oath|| " .. string.sub(old_server_name,1,17)
-		elseif mutationtoken then
+		elseif mutationtoken then 
 			lobby_data.unique_server_name = "||Mutated Slayer's Oath|| " .. string.sub(old_server_name,1,17)
 		else
 			lobby_data.unique_server_name = "||Slayer's Oath|| " .. string.sub(old_server_name,1,17)
@@ -6135,7 +6135,7 @@ else
 			lobby_data.unique_server_name = "||DW MUTATED ONSLAUGHT|| " .. string.sub(old_server_name,1,17)
 		elseif lobby_data.difficulty == "hardest" and deathwishtoken then
 			lobby_data.unique_server_name = "||Deathwish Onslaught|| " .. string.sub(old_server_name,1,17)
-		elseif mutationtoken then
+		elseif mutationtoken then 
 			lobby_data.unique_server_name = "||Mutated Onslaught|| " .. string.sub(old_server_name,1,17)
 		else
 			lobby_data.unique_server_name = "||Onslaught|| " .. string.sub(old_server_name,1,17)

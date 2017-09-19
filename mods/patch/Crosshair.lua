@@ -335,7 +335,7 @@ Mods.hook.set(mod_name, "CrosshairUI.update_hit_markers", function (func, self, 
 end)
 
 local change_crosshair_color = function(crosshair_ui)
-	crosshair_ui.crosshair_dot.style.color = colors[get(mod.SETTINGS.COLOR)]
+  	crosshair_ui.crosshair_dot.style.color = colors[get(mod.SETTINGS.COLOR)]
 	crosshair_ui.crosshair_up.style.color = colors[get(mod.SETTINGS.COLOR)]
 	crosshair_ui.crosshair_down.style.color = colors[get(mod.SETTINGS.COLOR)]
 	crosshair_ui.crosshair_left.style.color = colors[get(mod.SETTINGS.COLOR)]
