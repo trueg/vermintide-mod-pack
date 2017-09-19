@@ -12,7 +12,7 @@ Mods.init = function()
 	Mods.exec("patch/function", "Mods.gui")
 	Mods.exec("patch/function", "Mods.debug")
 	Mods.exec("patch/function", "Mods.ui")
-	
+
 	Mods.exec("patch/options", "Mods.option_menu")
 
 	Mods.exec("patch/options", "Keyboard")
@@ -41,9 +41,18 @@ Mods.init = function()
 	Mods.exec("patch", "WeaponSwitching")
 	Mods.exec("patch", "ThirdPersonEquipment_Definitions")
 	Mods.exec("patch", "ThirdPersonEquipment")
+	Mods.exec("patch", "LobbyImprovements")
+	Mods.exec("patch", "SkinDisabler")
+	Mods.exec("patch", "MutatorSelector")
+	Mods.exec("patch", "ChangeWeaponModelsWarning")
 
 	Mods.exec("patch", "PauseGame")
 	Mods.exec("patch", "SkipCutscenes")
+
+	-- Unstable mod loaded only if the warning setting is enabled.
+	if Application.user_setting("cb_weapon_model_warning") then
+		Mods.exec("patch", "ChangeWeaponModels")
+	end
 
 	--Additional mods go here :
 	--Mods.exec("patch", "Mod file name here")

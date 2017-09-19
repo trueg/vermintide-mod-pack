@@ -21,6 +21,42 @@ local FF_FAKE_DAMAGE_TYPE = "knockdown_bleed"
 	Setting defs.
 --]]
 local MOD_SETTINGS = {
+	SUB_GROUP = {
+		["save"] = "cb_hudmod_subgroup",
+		["widget_type"] = "dropdown_checkbox",
+		["text"] = "Goodies",
+		["default"] = false,
+		["hide_options"] = {
+			{
+				true,
+				mode = "show",
+				options = {
+					"cb_hudmod_alt_ff_ui",
+					"cb_hudmod_dynamic_ocharge_pips",
+					"cb_hud_party_trinkets_indicators",
+					"cb_potion_pickup_enabled",
+					"cb_damage_taken_enabled",
+					"cb_damage_hp_procs_fx",
+					"cb_hudmod_dodge_tired",
+					"cb_hud_force_gamepad_hud"
+				},
+			},
+			{
+				false,
+				mode = "hide",
+				options = {
+					"cb_hudmod_alt_ff_ui",
+					"cb_hudmod_dynamic_ocharge_pips",
+					"cb_hud_party_trinkets_indicators",
+					"cb_potion_pickup_enabled",
+					"cb_damage_taken_enabled",
+					"cb_damage_hp_procs_fx",
+					"cb_hudmod_dodge_tired",
+					"cb_hud_force_gamepad_hud"
+				},
+			},
+		},
+	},
 	ALTERNATIVE_FF_UI = {
 		["save"] = "cb_hudmod_alt_ff_ui",
 		["widget_type"] = "stepper",
@@ -64,6 +100,35 @@ local MOD_SETTINGS = {
 			{text = "On", value = true},
 		},
 		["default"] = 1, -- Default second option is enabled. In this case Off
+		["hide_options"] = {
+			{
+				false,
+				mode = "hide",
+				options = {
+					"cb_hud_party_trinkets_homogenize_icons",
+				}
+			},
+			{
+				true,
+				mode = "show",
+				options = {
+					"cb_hud_party_trinkets_homogenize_icons",
+				}
+			},
+		},
+	},
+	HOMOGENIZE_PARTY_TRINKET_ICONS = {
+		["save"] = "cb_hud_party_trinkets_homogenize_icons",
+		["widget_type"] = "stepper",
+		["text"] = "Homogenize Event Icons",
+		["tooltip"] = "Homogenize Event Icons\n" ..
+			"Make event trinkets have icon of its closest equivalent.",
+		["value_type"] = "boolean",
+		["options"] = {
+			{text = "Off", value = false},
+			{text = "On", value = true},
+		},
+		["default"] = 1, -- Off
 	},
 	POTION_PICKUP = {
 		["save"] = "cb_potion_pickup_enabled",
@@ -91,18 +156,102 @@ local MOD_SETTINGS = {
 		},
 		["default"] = 1, -- Default second option is enabled. In this case Off
 	},
+	HP_PROCS_FX = {
+		["save"] = "cb_damage_hp_procs_fx",
+		["widget_type"] = "stepper",
+		["text"] = "Hide Bloodlust/Regrowth Proc Effects",
+		["tooltip"] = "Hide Bloodlust/Regrowth Proc Effects\n" ..
+			"Hide graphic effects on bloodlust/regrowth procs.",
+		["value_type"] = "boolean",
+		["options"] = {
+			{text = "Off", value = false},
+			{text = "On", value = true},
+		},
+		["default"] = 1, -- Default second option is enabled. In this case Off
+	},
+	DODGE_TIRED = {
+		["save"] = "cb_hudmod_dodge_tired",
+		["widget_type"] = "stepper",
+		text = "Too Tired to Dodge Display",
+		tooltip = "Too Tired to Dodge Display\n" ..
+			"Displays a warning when you are too tired to dodge.",
+		["value_type"] = "boolean",
+		["options"] = {
+			{text = "Off", value = false},
+			{text = "On", value = true},
+		},
+		["default"] = 1, -- Default second option is enabled. In this case Off
+	},
+	FORCE_GAMEPAD_HUD = {
+		["save"] = "cb_hud_force_gamepad_hud",
+		["widget_type"] = "stepper",
+		["text"] = "Always Use Gamepad HUD",
+		["tooltip"] = "Always Use Gamepad HUD\n" ..
+			"A different HUD is used when you play the game with a gamepad, one which has a larger health " ..
+			"bar but is more compact overall. Enabling this option will cause the gamepad HUD to be used " ..
+			"even when you are not using a gamepad.",
+		["value_type"] = "boolean",
+		["options"] = {
+			{text = "Off", value = false},
+			{text = "On", value = true},
+		},
+		["default"] = 1, -- By default first option is selected, in this case "Off"
+	},
 }
 
-Mods.hook.set(mod_name, "PlayerDamageExtension.add_damage", function(orig_func, self, attacker_unit, damage_amount, hit_zone_name, damage_type,
-			damage_direction, damage_source_name, hit_ragdoll_actor, damaging_unit)
+local MAX_INDICATOR_WIDGETS = 10
+local ignored_damage_types_reaction = {
+    buff_shared_medpack = true,
+    kinetic = true,
+    wounded_dot = true,
+    buff = true,
+    heal = true,
+    knockdown_bleed = true
+}
+local ignored_damage_types_indicator = {
+    globadier_gas_dot = true,
+    buff_shared_medpack = true,
+    wounded_dot = true,
+    buff = true,
+    heal = true,
+    damage_over_time = true,
+    knockdown_bleed = true
+}
 
-	if user_setting(MOD_SETTINGS.ALTERNATIVE_FF_UI.save) and is_player_unit(attacker_unit) and attacker_unit ~= self.unit then
-		-- this type of damage is ignored by the damage indicator (see ignored_damage_types in
-		-- damage_indicator_gui.lua, and also in hit_reactions.lua).
-		damage_type = FF_FAKE_DAMAGE_TYPE
+local function trigger_player_taking_damage_buffs(player_unit, attacker_unit, is_server)
+	if ScriptUnit.has_extension(player_unit, "buff_system") then
+	local buff_extension = ScriptUnit.extension(player_unit, "buff_system")
+
+		if buff_extension.has_buff_type(buff_extension, "chance_to_bonus_fatigue_reg_damage_taken") then
+			local percentage_chance = 1
+			percentage_chance = buff_extension.apply_buffs_to_value(buff_extension, percentage_chance, StatBuffIndex.CHANCE_TO_BONUS_FATIGUE_REG_DAMAGE_TAKEN, BuffTypes.PLAYER) - 1
+			percentage_chance = percentage_chance - 1
+
+			if percentage_chance <= math.random() then
+				buff_extension.add_buff(buff_extension, "melee_weapon_proc_bonus_fatigue_regen")
+			end
+		end
 	end
-	orig_func(self, attacker_unit, damage_amount, hit_zone_name, damage_type, damage_direction, damage_source_name, hit_ragdoll_actor, damaging_unit)
-end)
+
+	return
+end
+
+local function trigger_player_friendly_fire_dialogue(player_unit, attacker_unit)
+	local player_manager = Managers.player
+
+	if player_unit ~= attacker_unit and player_manager.is_player_unit(player_manager, attacker_unit) then
+		local profile_name_victim = ScriptUnit.extension(player_unit, "dialogue_system").context.player_profile
+		local profile_name_attacker = ScriptUnit.extension(attacker_unit, "dialogue_system").context.player_profile
+		local dialogue_input = ScriptUnit.extension_input(player_unit, "dialogue_system")
+		local event_data = FrameTable.alloc_table()
+		event_data.target = profile_name_victim
+		event_data.player_profile = profile_name_attacker
+
+		dialogue_input.trigger_dialogue_event(dialogue_input, "friendly_fire", event_data)
+	end
+
+	return
+end
 
 --[[
 	Implementation of dynamic markers on overcharge bar.
@@ -249,7 +398,8 @@ local dupe_position = luck_position + 5
 local tracked_trinkets = {
 	pot_share = { match = "potion_spread", position = 2 },
 	pot_share_skulls = { match = "pot_share", position = 2 },
-	hp_share = { match = "medpack_spread", position = 1 },
+	dove = { match = "heal_self_on_heal_other", position = 1, priority = 2 },
+	hp_share = { match = "medpack_spread", position = 1, priority = 1 },
 	grenade_radius = { match = "grenade_radius", position = 3 },
 	luck = { match = "increase_luck", position = luck_position },
 	grim = { match = "reduce_grimoire_penalty", position = 5 },
@@ -258,23 +408,75 @@ local tracked_trinkets = {
 	bomb_dupe = { match = "not_consume_grenade", position = 8 },
 	dupe = { match = "not_consume_pickup", position = dupe_position },
 }
+local trinket_icon_replacements = {
+	["icon_trophy_skull_encased_t3_03"] = "icon_trophy_potion_rack_t3_01",
+	["icon_trophy_garlic_01"] = "icon_trophy_twig_of_loren_01_02",
+	["icon_trophy_moot_charm_01_01"] = "icon_trophy_luckstone_01_01",
+	["icon_trophy_flower_flask_01_01"] = "icon_trophy_carrion_claw_01_01",
+}
+
+local dodge_tired_widget = {
+	scenegraph_id = "pivot",
+	offset = { -40, 45, -2 },
+	element = {
+		passes = {
+			{
+				style_id = "dodge_tired_text",
+				pass_type = "text",
+				text_id = "dodge_tired_text",
+			}
+		}
+	},
+	content = {
+		dodge_tired_text = ""
+	},
+	style = {
+		dodge_tired_text = {
+			font_type = "hell_shark",
+			size = { 27, 30 },
+			text_color = Colors.color_definitions.red,
+			font_size = 27,
+			offset = { 0, 0, 1 }
+		}
+	}
+}
 
 local function get_active_trinket_slots(attachment_extn)
-
-	local active_trinket_slots = {}
-	local trinket_icons = {}
+	local active_trinkets = {}
 	for _, slot_name in ipairs({"slot_trinket_1", "slot_trinket_2", "slot_trinket_3"}) do
 		local slot_data =  attachment_extn and attachment_extn._attachments.slots[slot_name]
 		local item_key = slot_data and slot_data.item_data.key
 		for _, trinket in pairs(tracked_trinkets) do
 			if item_key and string.find(item_key, trinket.match) ~= nil then
-				table.insert(active_trinket_slots, trinket.position)
-				trinket_icons[trinket.position] = ItemMasterList[item_key].inventory_icon
+				local pos = trinket.position
+				if not (active_trinkets[pos] and active_trinkets[pos].info.priority < trinket.priority) then
+					active_trinkets[pos] = {info = trinket, icon = ItemMasterList[item_key].inventory_icon}
+					if user_setting(MOD_SETTINGS.HOMOGENIZE_PARTY_TRINKET_ICONS.save) then
+						for icon_name, replacement_icon_name in pairs(trinket_icon_replacements) do
+							if active_trinkets[pos].icon == icon_name then
+								active_trinkets[pos].icon = replacement_icon_name
+							end
+						end
+					end
+				end
 			end
 		end
 	end
-	return active_trinket_slots, trinket_icons
+	return active_trinkets
 end
+
+Mods.hook.set(mod_name, "UnitFramesHandler._create_unit_frame_by_type", function(orig_func, self, ...)
+	if user_setting(MOD_SETTINGS.FORCE_GAMEPAD_HUD.save) then
+		-- The gamepad HUD will be used if the platform is not "win32"
+		local real_platform = self.platform
+		self.platform = "definitely-not-win32"
+		local result = orig_func(self, ...)
+		self.platform = real_platform
+		return result
+	else
+		return orig_func(self, ...)
+	end
+end)
 
 Mods.hook.set(mod_name, "UnitFramesHandler.update", function(orig_func, self, dt, t, my_player)
 	local player_unit = self.my_player.player_unit
@@ -287,11 +489,10 @@ Mods.hook.set(mod_name, "UnitFramesHandler.update", function(orig_func, self, dt
 				for i = 1, array_length/DAMAGE_DATA_STRIDE, 1 do
 					local index = (i - 1) * DAMAGE_DATA_STRIDE
 					local attacker = strided_array[index + DamageDataIndex.ATTACKER]
-					local damage_type = strided_array[index + DamageDataIndex.DAMAGE_TYPE]
 
 					-- If this damage is FF, find the HUD area of the attacking player and tell it to
 					-- display the FF indicator.
-					if damage_type == FF_FAKE_DAMAGE_TYPE and is_player_unit(attacker) and attacker ~= player_unit then
+					if is_player_unit(attacker) and attacker ~= player_unit then
 						for _, unit_frame in ipairs(self._unit_frames) do
 							local team_member = unit_frame.player_data.player
 							if team_member and team_member.player_unit == attacker then
@@ -312,24 +513,191 @@ Mods.hook.set(mod_name, "UnitFramesHandler.update", function(orig_func, self, dt
 					extensions.attachment = ScriptUnit.extension(unit_frame.player_data.player_unit, "attachment_system")
 				end
 				local attachment_extn = extensions and extensions.attachment
-				local active_trinket_slots, trinket_icons = {}, {}
+				local active_trinkets = {}
 				if attachment_extn then
-					active_trinket_slots, trinket_icons = get_active_trinket_slots(attachment_extn)
+					active_trinkets = get_active_trinket_slots(attachment_extn)
 				end
-				if unit_frame.data._hudmod_active_trinket_slots ~= active_trinket_slots then
-					unit_frame.data._hudmod_active_trinket_slots = active_trinket_slots
-					unit_frame.data._hudmod_trinket_icons = trinket_icons
+				if unit_frame.data._hudmod_active_trinkets ~= active_trinkets then
+					unit_frame.data._hudmod_active_trinkets = active_trinkets
+					self._dirty = true
+				end
+			end
+		end
+
+		-- Update dodge info.
+		if user_setting(MOD_SETTINGS.DODGE_TIRED.save) then
+			local player_unit_frame = nil
+			local my_player_unit = Managers.player:local_player().player_unit
+			for _,unit_frame in ipairs(self._unit_frames) do
+				if unit_frame.player_data.player_unit and unit_frame.player_data.player_unit == my_player_unit then
+					player_unit_frame = unit_frame
+					break
+				end
+			end
+			if player_unit_frame then
+				local dodge_value = nil
+				if Unit.alive(my_player_unit) then
+					local status_extension = ScriptUnit.extension(my_player_unit, "status_system")
+					if status_extension then
+						local movement_settings_table = PlayerUnitMovementSettings.get_movement_settings_table(my_player_unit)
+						dodge_value = movement_settings_table.dodging.distance*movement_settings_table.dodging.distance_modifier*status_extension:get_dodge_cooldown()
+					end
+				end
+				if player_unit_frame.data._hudmod_dodge_value ~= dodge_value then
+					player_unit_frame.data._hudmod_dodge_value = dodge_value
 					self._dirty = true
 				end
 			end
 		end
 	end
+
+	-- Check whether the FORCE_GAMEPAD_HUD setting has changed.
+	local force_gamepad_hud = user_setting(MOD_SETTINGS.FORCE_GAMEPAD_HUD.save)
+	if not force_gamepad_hud ~= not self._unit_frames[1].gamepad_version then
+		if force_gamepad_hud then
+			self:on_gamepad_activated()
+		else
+			self:on_gamepad_deactivated()
+		end
+		self.ingame_ui.ingame_hud.player_inventory_ui:set_visible(self._is_visible)
+	end
+
 	return orig_func(self, dt, t, my_player)
+end)
+
+Mods.hook.set(mod_name, "HitReactions.templates.player.unit", function(func, unit, dt, context, t, hit)
+	if not user_setting(MOD_SETTINGS.ALTERNATIVE_FF_UI.save) then
+		return func(unit, dt, context, t, hit)
+	end
+
+	local damage_type = hit[DamageDataIndex.DAMAGE_TYPE]
+
+	if not ignored_damage_types_reaction[damage_type] then
+		local attacker = hit[DamageDataIndex.ATTACKER]
+		local damage_type = hit[DamageDataIndex.DAMAGE_TYPE]
+		local damage_source_name = hit[DamageDataIndex.DAMAGE_SOURCE_NAME]
+
+		if not is_player_unit(attacker) or attacker == unit then
+			if ((damage_type ~= "burn" and damage_type ~= "burninating") or
+				(string.find(damage_source_name, "bw_skullstaff_geiser") == nil and
+				(damage_type ~= "burninating" or string.find(damage_source_name, "grenade_fire") == nil))) then
+
+				local first_person_extension = ScriptUnit.extension(unit, "first_person_system")
+
+				if 0 < hit[DamageDataIndex.DAMAGE_AMOUNT] then
+					first_person_extension.animation_event(first_person_extension, "shake_get_hit")
+				end
+			end
+		end
+
+		trigger_player_taking_damage_buffs(unit, attacker, true)
+		trigger_player_friendly_fire_dialogue(unit, attacker)
+	end
+
+	return
+end)
+
+Mods.hook.set(mod_name, "DamageIndicatorGui.update", function(func, self, dt)
+    if not user_setting(MOD_SETTINGS.ALTERNATIVE_FF_UI.save) then
+        return func(self, dt)
+    end
+
+    local input_manager = self.input_manager
+    local input_service = input_manager.get_service(input_manager, "ingame_menu")
+    local ui_renderer = self.ui_renderer
+    local ui_scenegraph = self.ui_scenegraph
+    local indicator_widgets = self.indicator_widgets
+    local peer_id = self.peer_id
+    local my_player = self.player_manager:player_from_peer_id(peer_id)
+    local player_unit = my_player.player_unit
+
+    if not player_unit then
+        return
+    end
+
+    UIRenderer.begin_pass(ui_renderer, ui_scenegraph, input_service, dt, "damage_indicator_center")
+
+    local damage_extension = ScriptUnit.extension(player_unit, "damage_system")
+    local strided_array, array_length = damage_extension.recent_damages(damage_extension)
+    local indicator_positions = self.indicator_positions
+
+    if 0 < array_length then
+        for i = 1, array_length/DamageDataIndex.STRIDE, 1 do
+            local index = (i - 1)*DamageDataIndex.STRIDE
+            local attacker = strided_array[index + DamageDataIndex.ATTACKER]
+            local damage_type = strided_array[index + DamageDataIndex.DAMAGE_TYPE]
+            local damage_source_name = strided_array[index + DamageDataIndex.DAMAGE_SOURCE_NAME]
+            local show_direction = not ignored_damage_types_indicator[damage_type]
+
+            if ((is_player_unit(attacker) and attacker ~= player_unit) or
+                (damage_type == "burninating" and string.find(damage_source_name, "grenade_fire") ~= nil) or
+                ((damage_type == "burn" or damage_type == "burninating") and string.find(damage_source_name, "bw_skullstaff_geiser") ~= nil)) then
+                show_direction = false
+            end
+
+            if attacker and Unit.alive(attacker) and show_direction then
+                local next_active_indicator = self.num_active_indicators + 1
+
+                if next_active_indicator <= MAX_INDICATOR_WIDGETS then
+                    self.num_active_indicators = next_active_indicator
+                else
+                    next_active_indicator = 1
+                end
+
+                local widget = indicator_widgets[next_active_indicator]
+                local indicator_position = indicator_positions[next_active_indicator]
+                local attacker_position = POSITION_LOOKUP[attacker] or Unit.world_position(attacker, 0)
+
+                Vector3Aux.box(indicator_position, attacker_position)
+
+                indicator_position[3] = 0
+
+                UIWidget.animate(widget, UIAnimation.init(UIAnimation.function_by_time, widget.style.rotating_texture.color, 1, 255, 0, 1, math.easeInCubic))
+            end
+        end
+    end
+
+    local first_person_extension = ScriptUnit.extension(player_unit, "first_person_system")
+    local my_pos = Vector3.copy(POSITION_LOOKUP[player_unit])
+    local my_rotation = first_person_extension.current_rotation(first_person_extension)
+    local my_direction = Quaternion.forward(my_rotation)
+    my_direction.z = 0
+    my_direction = Vector3.normalize(my_direction)
+    local my_left = Vector3.cross(my_direction, Vector3.up())
+    my_pos.z = 0
+    local i = 1
+    local num_active_indicators = self.num_active_indicators
+
+    while i <= num_active_indicators do
+        local widget = indicator_widgets[i]
+
+        if not UIWidget.has_animation(widget) then
+            local swap = indicator_widgets[num_active_indicators]
+            indicator_widgets[i] = swap
+            indicator_widgets[num_active_indicators] = widget
+            num_active_indicators = num_active_indicators - 1
+        else
+            local direction = Vector3.normalize(Vector3Aux.unbox(indicator_positions[i]) - my_pos)
+            local forward_dot_dir = Vector3.dot(my_direction, direction)
+            local left_dot_dir = Vector3.dot(my_left, direction)
+            local angle = math.atan2(left_dot_dir, forward_dot_dir)
+            widget.style.rotating_texture.angle = angle
+            i = i + 1
+
+            UIRenderer.draw_widget(ui_renderer, widget)
+        end
+    end
+
+    self.num_active_indicators = num_active_indicators
+
+    UIRenderer.end_pass(ui_renderer)
+
+    return
 end)
 
 Mods.hook.set(mod_name, "UnitFrameUI.draw", function(orig_func, self, dt)
 	local data = self.data
-	if self._is_visible and (data._hudmod_ff_state ~= nil or data._hudmod_active_trinket_slots) then
+	if self._is_visible and (data._hudmod_ff_state ~= nil or data._hudmod_active_trinkets or data._hudmod_dodge_value ~= nil) then
 		local ui_renderer = self.ui_renderer
 		local input_service = self.input_manager:get_service("ingame_menu")
 		UIRenderer.begin_pass(ui_renderer, self.ui_scenegraph, input_service, dt, nil, self.render_settings)
@@ -379,17 +747,43 @@ Mods.hook.set(mod_name, "UnitFrameUI.draw", function(orig_func, self, dt)
 				end
 			end
 
+			local important_trinkets = data._hudmod_active_trinkets or {}
 			for i=1,9 do
 				widget.content["trinket_"..i].show = false
-				if table.has_item(data._hudmod_active_trinket_slots or {}, i) then
-					if i < 6 or table.has_item(data._hudmod_active_trinket_slots or {}, i-5) then
+				if important_trinkets[i] then
+					if i < 6 or important_trinkets[i-5] then
 						widget.content["trinket_"..i].show = true
-						widget.content["trinket_"..i].texture_id = data._hudmod_trinket_icons[i]
+						widget.content["trinket_"..i].texture_id = important_trinkets[i].icon
 					elseif i == dupe_position then
 						widget.content["trinket_"..luck_position].show = true
-						widget.content["trinket_"..luck_position].texture_id = data._hudmod_trinket_icons[i]
+						widget.content["trinket_"..luck_position].texture_id = important_trinkets[i].icon
 					end
 				end
+			end
+
+			UIRenderer.draw_widget(ui_renderer, widget)
+		end
+
+		UIRenderer.end_pass(ui_renderer)
+
+		---------------------------------
+
+		UIRenderer.begin_pass(ui_renderer, self.ui_scenegraph, input_service, dt, nil, self.render_settings)
+
+		if user_setting(MOD_SETTINGS.DODGE_TIRED.save) then
+			local widget = self._dodge_tired_widget
+
+			if not widget then
+				local widget_settings = {}
+				widget_settings = table.create_copy(widget_settings, dodge_tired_widget)
+				widget = UIWidget.init(widget_settings)
+				self._dodge_tired_widget = widget
+			end
+
+			if data._hudmod_dodge_value == nil or data._hudmod_dodge_value >= 1.7 then
+				widget.content.dodge_tired_text = ""
+			else
+				widget.content.dodge_tired_text = "TIRED"
 			end
 
 			UIRenderer.draw_widget(ui_renderer, widget)
@@ -399,6 +793,46 @@ Mods.hook.set(mod_name, "UnitFrameUI.draw", function(orig_func, self, dt)
 	end
 
 	return orig_func(self, dt)
+end)
+
+Mods.hook.set(mod_name, "PlayerInventoryUI.set_visible", function (orig_func, self, visible)
+	-- In the gamepad HUD the inventory UI is part of the unit frame.
+	if user_setting(MOD_SETTINGS.FORCE_GAMEPAD_HUD.save) then
+		visible = false
+	end
+	return orig_func(self, visible)
+end)
+
+Mods.hook.set(mod_name, "BoonUI.update", function (func, self, dt, t)
+	func(self, dt, t)
+	-- Force update boon positions when mod turned on/off
+	if user_setting(MOD_SETTINGS.FORCE_GAMEPAD_HUD.save) then
+		if not self.force_gamepad_active_last_frame then
+			self.force_gamepad_active_last_frame = true
+
+			self.on_gamepad_activated(self)
+		end
+	elseif self.force_gamepad_active_last_frame then
+		self.force_gamepad_active_last_frame = false
+
+		self.on_gamepad_deactivated(self)
+	end
+end)
+
+Mods.hook.set(mod_name, "BoonUI._align_widgets", function (func, self)
+	func(self)
+	-- -250 X widget offset on boons for gamepad needs to be manually reapplied
+	if user_setting(MOD_SETTINGS.FORCE_GAMEPAD_HUD.save) then
+		local boon_width = 38
+		local boon_spacing = 15
+		local widget_total_width = 0
+		for _, data in ipairs(self._active_boons) do
+			local widget = data.widget
+			local widget_offset = widget.offset
+			widget_offset[1] = -250 + widget_total_width
+			widget_total_width = widget_total_width - (boon_width + boon_spacing)
+		end
+	end
 end)
 
 --[[
@@ -463,16 +897,34 @@ Mods.hook.set(mod_name, "GenericUnitDamageExtension.add_damage", function (func,
 end)
 
 --[[
+	No hp procs fx, by Grundlid.
+--]]
+Mods.hook.set(mod_name, "GenericStatusExtension.healed", function (func, self, reason)
+	if not user_setting(MOD_SETTINGS.HP_PROCS_FX.save) then
+		return func(self, reason)
+	end
+
+	if reason == "proc" and self.player.local_player then return end
+
+	func(self, reason)
+end)
+
+--[[
 	Add options for this module to the Options UI.
 --]]
 local function create_options()
-	Mods.option_menu:add_group("hud", "HUD Goodies")
+	Mods.option_menu:add_group("hud_group", "HUD Related Mods")
 
-	Mods.option_menu:add_item("hud", MOD_SETTINGS.ALTERNATIVE_FF_UI, true)
-	Mods.option_menu:add_item("hud", MOD_SETTINGS.OVERCHARGE_BAR_DYNAMIC_MARKERS, true)
-	Mods.option_menu:add_item("hud", MOD_SETTINGS.PARTY_TRINKETS_INDICATORS, true)
-	Mods.option_menu:add_item("hud", MOD_SETTINGS.POTION_PICKUP, true)
-	Mods.option_menu:add_item("hud", MOD_SETTINGS.DAMAGE_TAKEN, true)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.SUB_GROUP, true)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.ALTERNATIVE_FF_UI)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.OVERCHARGE_BAR_DYNAMIC_MARKERS)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.PARTY_TRINKETS_INDICATORS)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.HOMOGENIZE_PARTY_TRINKET_ICONS)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.POTION_PICKUP)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.DAMAGE_TAKEN)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.HP_PROCS_FX)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.DODGE_TIRED)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.FORCE_GAMEPAD_HUD)
 end
 
 local status, err = pcall(create_options)

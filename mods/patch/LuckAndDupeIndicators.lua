@@ -8,6 +8,30 @@ local save = Application.save_user_settings
 
 LuckAndDupeIndicators = {
 	SETTINGS = {
+		SUB_GROUP = {
+			["save"] = "cb_luck_and_dupe_indicators_subgroup",
+			["widget_type"] = "dropdown_checkbox",
+			["text"] = "Luck And Dupe Indicators",
+			["default"] = false,
+			["hide_options"] = {
+				{
+					true,
+					mode = "show",
+					options = {
+						"cb_luck_and_dupe_indicators_luck_enabled",
+						"cb_luck_and_dupe_indicators_dupe_enabled"
+					},
+				},
+				{
+					false,
+					mode = "hide",
+					options = {
+						"cb_luck_and_dupe_indicators_luck_enabled",
+						"cb_luck_and_dupe_indicators_dupe_enabled"
+					},
+				},
+			},
+		},
 		ENABLED_LUCK = {
 			["save"] = "cb_luck_and_dupe_indicators_luck_enabled",
 			["widget_type"] = "checkbox",
@@ -103,7 +127,7 @@ local function create_chest_icon(unit, pickup_name)
 		local position2d, depth = Camera.world_to_screen(camera, world_pos)
 
 		if distance > 0.5 and distance < 6.5 and depth < 1 then
-			local scale = math.clamp((6.5-distance)/6.5, 0 ,1)
+			local scale = math.clamp((6.5-distance)/6.5, 0, 1)
 			local size = Vector2(96 * scale*1.25, 96 * scale*1.25)
 			local pos = Vector3(position2d[1]-size[1]/2, position2d[2]-size[2]/2, 200)
 
@@ -120,9 +144,6 @@ local function create_dupe_icon(unit, pickup_name)
 	local viewport = ScriptWorld.viewport(world, player.viewport_name)
 	local camera = ScriptViewport.camera(viewport)
 
-	local pickup_extension = ScriptUnit.extension(unit, "pickup_system")
-	local pickup_settings = pickup_extension.get_pickup_settings(pickup_extension)
-
 	if POSITION_LOOKUP[unit] and POSITION_LOOKUP[player.player_unit] then
 		local distance = Vector3.distance(POSITION_LOOKUP[unit], POSITION_LOOKUP[player.player_unit])
 		local world_pos = POSITION_LOOKUP[unit]
@@ -131,7 +152,7 @@ local function create_dupe_icon(unit, pickup_name)
 		world_pos.z = world_pos.z - 0.4
 
 		if distance > 0.5 and distance < 6.5 and depth < 1 then
-			local scale = math.clamp((6.5-distance)/6.5, 0 ,1)
+			local scale = math.clamp((6.5-distance)/6.5, 0, 1)
 			local size = Vector2(64 * scale*1, 64 * scale*1)
 			local pos = Vector3(position2d[1]-size[1]/2, position2d[2]-size[2]/2, 200)
 
@@ -209,13 +230,16 @@ Mods.hook.set(mod_name, "OutlineSystem.update", function(func, self, ...)
 			interactor_extension = ScriptUnit.extension(local_player.player_unit, "interactor_system")
 		end
 
+		local Unit_alive = Unit.alive
+		local Unit_has_data = Unit.has_data
+		local Unit_get_data = Unit.get_data
 		for _, unit in pairs(self.units) do
-			if Unit.alive(unit) then
-				if enabled_luck and anyone_with_luck and Unit.has_data(unit, "interaction_data") then
-					local interaction_type = Unit.get_data(unit, "interaction_data", "interaction_type")
+			if Unit_alive(unit) then
+				if enabled_luck and anyone_with_luck and Unit_has_data(unit, "interaction_data") then
+					local interaction_type = Unit_get_data(unit, "interaction_data", "interaction_type")
 
 					if interaction_type == "chest"
-						and Unit.get_data(unit, "interaction_data", "being_used") ~= false
+						and Unit_get_data(unit, "interaction_data", "being_used") ~= false
 						and not have_all_dice
 						then
 							create_chest_icon(unit)
@@ -244,12 +268,13 @@ Mods.hook.set(mod_name, "OutlineSystem.update", function(func, self, ...)
 end)
 
 mod.create_options = function()
-	Mods.option_menu:add_group("luck_and_dupe_indicators", "Luck And Dupe Indicators")
-	
-	Mods.option_menu:add_item("luck_and_dupe_indicators", mod.SETTINGS.ENABLED_LUCK, true)
-	Mods.option_menu:add_item("luck_and_dupe_indicators", mod.SETTINGS.ENABLED_LUCK_SELF)
-	Mods.option_menu:add_item("luck_and_dupe_indicators", mod.SETTINGS.ENABLED_DUPE, true)
-	Mods.option_menu:add_item("luck_and_dupe_indicators", mod.SETTINGS.ENABLED_DUPE_SELF)
+	Mods.option_menu:add_group("hud_group", "HUD Related Mods")
+
+	Mods.option_menu:add_item("hud_group", mod.SETTINGS.SUB_GROUP, true)
+	Mods.option_menu:add_item("hud_group", mod.SETTINGS.ENABLED_LUCK)
+	Mods.option_menu:add_item("hud_group", mod.SETTINGS.ENABLED_LUCK_SELF)
+	Mods.option_menu:add_item("hud_group", mod.SETTINGS.ENABLED_DUPE)
+	Mods.option_menu:add_item("hud_group", mod.SETTINGS.ENABLED_DUPE_SELF)
 end
 
 mod.create_options()

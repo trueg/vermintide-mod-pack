@@ -29,6 +29,16 @@ local ColorHelper = {
 	end,
 }
 
+local function draw_image(texture_id, uvs, position, position_z, size, color)
+	local pos_vector = Vector3(position[1], position[2], position_z)
+	local size_vector = Vector2(size[1], size[2])
+	if uvs then
+		UIRenderer.script_draw_bitmap_uv(Mods.gui.gui, nil, texture_id, uvs, pos_vector, size_vector, color)
+	else
+		UIRenderer.script_draw_bitmap(Mods.gui.gui, nil, texture_id, pos_vector, size_vector, color)
+	end
+end
+
 -- ################################################################################################################
 -- ##### Main Object ##############################################################################################
 -- ################################################################################################################
@@ -760,6 +770,31 @@ Mods.ui = {
 			create_label = function(self, name, position, size, text)
 				local control = self:create_control(name, position, size, "label")
 				control:set("text", text or "")
+				self:add_control(control)
+				return control
+			end,
+			--[[
+				Create image
+			--]]
+			create_image = function(self, name, texture_id, position, size, color, uvs)
+				-- Base control
+				local control = self:create_control(name, position, size, "image")
+				-- Set attributes
+				control:set("texture_id", texture_id)
+				control:set("color", color or { 255, 255, 255, 255 })
+				control:set("uvs", uvs)
+				-- Add control
+				self:add_control(control)
+				return control
+			end,
+			--[[
+				Create checkbox_square
+			--]]
+			create_checkbox_square = function(self, name, position, text, value, on_value_changed)
+				local control = self:create_control(name, position, nil, "checkbox_square")
+				control:set("text", text or "")
+				control:set("value", value or false)
+				control:set("on_value_changed", on_value_changed)
 				self:add_control(control)
 				return control
 			end,
@@ -2339,6 +2374,102 @@ Mods.ui = {
 			end,
 		},
 
+		image = {
+			render = function(self)
+				if self.visible then
+					draw_image(self.texture_id, self.uvs, self.position, self:position_z(), self.size, self.color)
+				end
+			end,
+		},
+
+		checkbox_square = {
+			-- ################################################################################################################
+			-- ##### Methods ##################################################################################################
+			-- ################################################################################################################
+			--[[
+				Toggle state
+			--]]
+			toggle = function(self)
+				-- Change
+				self.value = not self.value
+				-- Trigger event
+				self:on_value_changed()
+			end,
+			-- ################################################################################################################
+			-- ##### Control overrides ########################################################################################
+			-- ################################################################################################################
+			--[[
+				Release override
+			--]]
+			release = function(self)
+				-- Disabled
+				if self.disabled or self.immutable then return end
+				-- Original function
+				self:release_base()
+				-- Toggle
+				self:toggle()
+			end,
+			bounds = function(self)
+				local font = Mods.ui.fonts:get(self.theme.font)
+				local text_width = Mods.gui.text_width(self.text, font.material, font:font_size())
+				local text_height = font:font_size()
+				return Mods.ui.to_bounds(self.position, { (16 + 3 + text_width), math.max(16, text_height) })
+			end,
+			-- ################################################################################################################
+			-- ##### Render overrides #########################################################################################
+			-- ################################################################################################################
+			--[[
+				Render override
+			--]]
+			render = function(self)
+				-- Visible
+				if self.visible then
+					-- Render label
+					self:render_text()
+					-- Render box
+					self:render_box()
+				end
+			end,
+			--[[
+				Render text override
+			--]]
+			render_text = function(self)
+				-- Visible
+				if not self.visible then return end
+				-- Get current theme color
+				local color
+				if self.disabled or self.immutable then
+					color = ColorHelper.unbox(self.theme.color_text_disabled)
+				elseif self.hovered then
+					color = ColorHelper.unbox(self.theme.color_text_hover)
+				else
+					color = ColorHelper.unbox(self.theme.color_text)
+				end
+				-- Get font
+				local font = Mods.ui.fonts:get(self.theme.font)
+				-- Render text
+				local position = self.position
+				Mods.gui.text(self.text, position[1] + 16 + 3, position[2] + 2, self:position_z(), font:font_size(), color, font.font)
+			end,
+			--[[
+				Render box
+			--]]
+			render_box = function(self)
+				-- Visible
+				if not self.visible then return end
+				-- Check value
+				local texture_id = (self.value and "checkbox_checked") or "checkbox_unchecked"
+				draw_image(texture_id, nil, self.position, self:position_z(), { 16, 16 }, { 255, 255, 255, 255 })
+			end,
+			-- ################################################################################################################
+			-- ##### Events ###################################################################################################
+			-- ################################################################################################################
+			--[[
+				Text changed
+			--]]
+			on_value_changed = function(self)
+			end,
+		}
 	},
 
 	-- ################################################################################################################
@@ -2421,7 +2552,9 @@ Mods.ui = {
 					border = 0,
 					color = {20, 10, 10, 10},
 				},
-			}
+			},
+			image = {},
+			checkbox_square = {}
 		},
 	}
 

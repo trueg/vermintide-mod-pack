@@ -1,6 +1,6 @@
 --[[
 	Author: grasmann
-	
+
 	This script will add an options seperator into the mod settings
 --]]
 pcall(function()

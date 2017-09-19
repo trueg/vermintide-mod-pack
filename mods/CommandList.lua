@@ -13,6 +13,7 @@ Mods.commands = {
 	{"/missionstats",false, 	"commands", 	"missionstats"},
 	{"/lorebook",	 false, 	"commands", 	"lorebook"},
 	{"/remind",	 true,	 	"commands", 	"remind"},
-	{"/freezeall",	 false,	 	"commands", 	"freezeall"},
+	{"/onslaught",	 false,	 	"commands", 	"onslaught"},
+	{"/freezeall",   false,         "commands",     "freezeall"},
 
 }

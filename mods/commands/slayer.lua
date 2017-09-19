@@ -1075,7 +1075,18 @@ TerrorEventBlueprints.survival_deathwish_sub13filler_4 = {
 		},
 		{
 			"delay",
-			duration = 90
+			duration = 10
+		},
+		{
+			"continue_when",
+			duration = 65,
+			condition = function (t)
+				return count_event_breed("skaven_poison_wind_globadier") == 0 and count_event_breed("skaven_storm_vermin_commander") == 0
+			end
+		},
+		{
+			"delay",
+			duration = 15
 		},
 		{
 			"event_horde",
@@ -1584,8 +1595,15 @@ TerrorEventBlueprints.survival_deathwish_wave7 = {
 			composition_type = "event_survival_stormvermin"
 		},
 		{
+			"continue_when",
+			duration = 75,
+			condition = function (t)
+				return count_event_breed("skaven_rat_ogre") == 0 and count_event_breed("skaven_storm_vermin_commander") == 0 and count_event_breed("skaven_gutter_runner") == 0 and count_event_breed("skaven_pack_master") == 0
+			end
+		},
+		{
 			"delay",
-			duration = 90
+			duration = 15
 		},
 		{
 			"event_horde",
@@ -1594,7 +1612,7 @@ TerrorEventBlueprints.survival_deathwish_wave7 = {
 		},
 		{
 			"delay",
-			duration = 3
+			duration = 5
 		},
 		{
 			"continue_when",
@@ -4651,8 +4669,15 @@ TerrorEventBlueprints.survival_deathwish_wave13 = {
 			breed_name = "skaven_rat_ogre"
 		},
 		{
+			"continue_when",
+			duration = 150,
+			condition = function (t)
+				return count_event_breed("skaven_poison_wind_globadier") == 0 and count_event_breed("skaven_ratling_gunner") == 0 and count_event_breed("skaven_gutter_runner") == 0 and count_event_breed("skaven_pack_master") == 0 and count_event_breed("skaven_rat_ogre") == 0
+			end
+		},
+		{
 			"delay",
-			duration = 180
+			duration = 30
 		},
 		{
 			"play_stinger",
@@ -4884,7 +4909,27 @@ TerrorEventBlueprints.survival_deathwish_bonus_wave = {
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
 			breed_name = "skaven_gutter_runner"
-		},	
+		},
+		{
+			"spawn_at_raw",
+			spawner_id = "boss_spawn",
+			breed_name = "skaven_gutter_runner"
+		},
+		{
+			"spawn_at_raw",
+			spawner_id = "boss_spawn",
+			breed_name = "skaven_gutter_runner"
+		},
+		{
+			"spawn_at_raw",
+			spawner_id = "boss_spawn",
+			breed_name = "skaven_gutter_runner"
+		},
+		{
+			"spawn_at_raw",
+			spawner_id = "boss_spawn",
+			breed_name = "skaven_gutter_runner"
+		},
 		{
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
@@ -4914,11 +4959,6 @@ TerrorEventBlueprints.survival_deathwish_bonus_wave = {
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
 			breed_name = "skaven_gutter_runner"
-		},	
-		{
-			"spawn_at_raw",
-			spawner_id = "boss_spawn",
-			breed_name = "skaven_gutter_runner"
 		},
 		{
 			"spawn_at_raw",
@@ -4930,21 +4970,6 @@ TerrorEventBlueprints.survival_deathwish_bonus_wave = {
 			spawner_id = "boss_spawn",
 			breed_name = "skaven_gutter_runner"
 		},
-		{
-			"spawn_at_raw",
-			spawner_id = "boss_spawn",
-			breed_name = "skaven_gutter_runner"
-		},
-		{
-			"spawn_at_raw",
-			spawner_id = "boss_spawn",
-			breed_name = "skaven_gutter_runner"
-		},
-		{
-			"spawn_at_raw",
-			spawner_id = "boss_spawn",
-			breed_name = "skaven_gutter_runner"
-		},	
 		{
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
@@ -4974,7 +4999,7 @@ TerrorEventBlueprints.survival_deathwish_bonus_wave = {
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
 			breed_name = "skaven_gutter_runner"
-		},	
+		},
 		{
 			"spawn_at_raw",
 			spawner_id = "boss_spawn",
@@ -5145,8 +5170,44 @@ TerrorEventBlueprints.survival_deathwish_bonus_wave = {
 		}
 }
 
+if OriginalTerrorEventBlueprints then
+	OriginalTerrorEventBlueprints.survival_magnus_deathwish_wave3_1 = TerrorEventBlueprints.survival_magnus_deathwish_wave3_1
+	OriginalTerrorEventBlueprints.survival_magnus_deathwish_wave3_2 = TerrorEventBlueprints.survival_magnus_deathwish_wave3_2
+	OriginalTerrorEventBlueprints.survival_fall_deathwish_wave3_1 = TerrorEventBlueprints.survival_fall_deathwish_wave3_1
+	OriginalTerrorEventBlueprints.survival_fall_deathwish_wave3_2 = TerrorEventBlueprints.survival_fall_deathwish_wave3_2
+	OriginalTerrorEventBlueprints.survival_deathwish_wave4 = TerrorEventBlueprints.survival_deathwish_wave4
+	OriginalTerrorEventBlueprints.survival_deathwish_sub13filler_1 = TerrorEventBlueprints.survival_deathwish_sub13filler_1
+	OriginalTerrorEventBlueprints.survival_deathwish_sub13filler_2 = TerrorEventBlueprints.survival_deathwish_sub13filler_2
+	OriginalTerrorEventBlueprints.survival_deathwish_sub13filler_3 = TerrorEventBlueprints.survival_deathwish_sub13filler_3
+	OriginalTerrorEventBlueprints.survival_deathwish_sub13filler_4 = TerrorEventBlueprints.survival_deathwish_sub13filler_4
+	OriginalTerrorEventBlueprints.survival_deathwish_sub13filler_5 = TerrorEventBlueprints.survival_deathwish_sub13filler_5
+	OriginalTerrorEventBlueprints.survival_deathwish_sub13filler_6 = TerrorEventBlueprints.survival_deathwish_sub13filler_6
+	OriginalTerrorEventBlueprints.survival_deathwish_wave7 = TerrorEventBlueprints.survival_deathwish_wave7
+	OriginalTerrorEventBlueprints.survival_magnus_deathwish_from_the_north = TerrorEventBlueprints.survival_magnus_deathwish_from_the_north
+	OriginalTerrorEventBlueprints.survival_magnus_deathwish_from_the_south = TerrorEventBlueprints.survival_magnus_deathwish_from_the_south
+	OriginalTerrorEventBlueprints.survival_magnus_deathwish_from_the_east = TerrorEventBlueprints.survival_magnus_deathwish_from_the_east
+	OriginalTerrorEventBlueprints.survival_magnus_deathwish_from_the_west = TerrorEventBlueprints.survival_magnus_deathwish_from_the_west
+	OriginalTerrorEventBlueprints.survival_fall_deathwish_from_the_north = TerrorEventBlueprints.survival_fall_deathwish_from_the_north
+	OriginalTerrorEventBlueprints.survival_fall_deathwish_from_the_south = TerrorEventBlueprints.survival_fall_deathwish_from_the_south
+	OriginalTerrorEventBlueprints.survival_fall_deathwish_from_the_east = TerrorEventBlueprints.survival_fall_deathwish_from_the_east
+	OriginalTerrorEventBlueprints.survival_fall_deathwish_from_the_west = TerrorEventBlueprints.survival_fall_deathwish_from_the_west
+	OriginalTerrorEventBlueprints.survival_magnus_deathwish_from_the_north_silent = TerrorEventBlueprints.survival_magnus_deathwish_from_the_north_silent
+	OriginalTerrorEventBlueprints.survival_magnus_deathwish_from_the_south_silent = TerrorEventBlueprints.survival_magnus_deathwish_from_the_south_silent
+	OriginalTerrorEventBlueprints.survival_magnus_deathwish_from_the_east_silent = TerrorEventBlueprints.survival_magnus_deathwish_from_the_east_silent
+	OriginalTerrorEventBlueprints.survival_magnus_deathwish_from_the_west_silent = TerrorEventBlueprints.survival_magnus_deathwish_from_the_west_silent
+	OriginalTerrorEventBlueprints.survival_fall_deathwish_from_the_north_silent = TerrorEventBlueprints.survival_fall_deathwish_from_the_north_silent
+	OriginalTerrorEventBlueprints.survival_fall_deathwish_from_the_south_silent = TerrorEventBlueprints.survival_fall_deathwish_from_the_south_silent
+	OriginalTerrorEventBlueprints.survival_fall_deathwish_from_the_east_silent = TerrorEventBlueprints.survival_fall_deathwish_from_the_east_silent
+	OriginalTerrorEventBlueprints.survival_fall_deathwish_from_the_west_silent = TerrorEventBlueprints.survival_fall_deathwish_from_the_west_silent
+	OriginalTerrorEventBlueprints.survival_deathwish_wave13 = TerrorEventBlueprints.survival_deathwish_wave13
+	OriginalTerrorEventBlueprints.survival_deathwish_bonus_wave = TerrorEventBlueprints.survival_deathwish_bonus_wave
+end
+
 if not slayertoken then
 	slayertoken = true
+
+	OriginalMagnusWaveset = table.clone(SurvivalSettings.survival_magnus_01.waves)
+	OriginalFallWaveset = table.clone(SurvivalSettings.dlc_01.waves)
 
 	--Wave 1
 	SurvivalSettings.survival_magnus_01.waves[27] = {
@@ -5365,7 +5426,7 @@ if not slayertoken then
 
 	--From the X (Wave 10 and 12)
 	SurvivalSettings.survival_magnus_01.waves[36] = {
-		"magnus_deathwish_from_the_x",
+		"magnus_deathwish_from_the_x_silent"
 	}
 
 	SurvivalSettings.survival_magnus_01.waves[38] = {
@@ -5376,7 +5437,7 @@ if not slayertoken then
 	}
 
 	SurvivalSettings.dlc_01.waves[36] = {
-		"fall_deathwish_from_the_x"
+		"fall_deathwish_from_the_x_silent"
 	}
 
 	SurvivalSettings.dlc_01.waves[38] = {
@@ -5487,7 +5548,398 @@ if not slayertoken then
 		"survival_deathwish_bonus_wave",
 		1
 	}
+
+	--Veteran
+	SurvivalSettings.survival_magnus_01.waves[1] = {
+		"deathwish_wave1",
+		reset = {
+			"deathwish_wave1"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[1] = {
+		"deathwish_wave1",
+		reset = {
+			"deathwish_wave1"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[2] = {
+		"deathwish_wave2",
+		reset = {
+			"deathwish_wave2"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[2] = {
+		"deathwish_wave2",
+		reset = {
+			"deathwish_wave2"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[3] = {
+		"magnus_deathwish_wave3",
+		reset = {
+			"magnus_deathwish_wave3"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[3] = {
+		"fall_deathwish_wave3",
+		reset = {
+			"fall_deathwish_wave3"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[4] = {
+		"deathwish_wave4",
+		reset = {
+			"deathwish_wave4"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[4] = {
+		"deathwish_wave4",
+		reset = {
+			"deathwish_wave4"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[5] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.dlc_01.waves[5] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[6] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.dlc_01.waves[6] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[7] = {
+		"deathwish_wave7",
+		reset = {
+			"deathwish_wave7"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[7] = {
+		"deathwish_wave7",
+		reset = {
+			"deathwish_wave7"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[8] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.dlc_01.waves[8] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[9] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.dlc_01.waves[9] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[10] = {
+		"magnus_deathwish_from_the_x"
+	}
+
+	SurvivalSettings.dlc_01.waves[10] = {
+		"fall_deathwish_from_the_x"
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[11] = {
+		"deathwish_sub13filler",
+		reset = {
+			"deathwish_sub13filler"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[11] = {
+		"deathwish_sub13filler",
+		reset = {
+			"deathwish_sub13filler"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[12] = {
+		"magnus_deathwish_from_the_x_silent",
+		reset = {
+			"magnus_deathwish_from_the_x_silent"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[12] = {
+		"fall_deathwish_from_the_x_silent",
+		reset = {
+			"fall_deathwish_from_the_x_silent"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[13] = {
+		"deathwish_wave_13",
+		reset = {
+			"deathwish_wave_13"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[13] = {
+		"deathwish_wave_13",
+		reset = {
+			"deathwish_wave_13"
+		}
+	}
+
+	--champion
+	SurvivalSettings.survival_magnus_01.waves[14] = {
+		"deathwish_wave1",
+		reset = {
+			"deathwish_wave1"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[14] = {
+		"deathwish_wave1",
+		reset = {
+			"deathwish_wave1"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[15] = {
+		"deathwish_wave2",
+		reset = {
+			"deathwish_wave2"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[15] = {
+		"deathwish_wave2",
+		reset = {
+			"deathwish_wave2"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[16] = {
+		"magnus_deathwish_wave3",
+		reset = {
+			"magnus_deathwish_wave3"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[16] = {
+		"fall_deathwish_wave3",
+		reset = {
+			"fall_deathwish_wave3"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[17] = {
+		"deathwish_wave4",
+		reset = {
+			"deathwish_wave4"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[17] = {
+		"deathwish_wave4",
+		reset = {
+			"deathwish_wave4"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[18] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.dlc_01.waves[18] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[19] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.dlc_01.waves[19] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[20] = {
+		"deathwish_wave7",
+		reset = {
+			"deathwish_wave7"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[20] = {
+		"deathwish_wave7",
+		reset = {
+			"deathwish_wave7"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[21] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.dlc_01.waves[21] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[22] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.dlc_01.waves[22] = {
+		"deathwish_sub13filler"
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[23] = {
+		"magnus_deathwish_from_the_x_silent"
+	}
+
+	SurvivalSettings.dlc_01.waves[23] = {
+		"fall_deathwish_from_the_x_silent"
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[24] = {
+		"deathwish_sub13filler",
+		reset = {
+			"deathwish_sub13filler"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[24] = {
+		"deathwish_sub13filler",
+		reset = {
+			"deathwish_sub13filler"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[25] = {
+		"magnus_deathwish_from_the_x_silent",
+		reset = {
+			"magnus_deathwish_from_the_x_silent"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[25] = {
+		"fall_deathwish_from_the_x_silent",
+		reset = {
+			"fall_deathwish_from_the_x_silent"
+		}
+	}
+
+	SurvivalSettings.survival_magnus_01.waves[26] = {
+		"deathwish_wave_13",
+		reset = {
+			"deathwish_wave_13"
+		}
+	}
+
+	SurvivalSettings.dlc_01.waves[26] = {
+		"deathwish_wave_13",
+		reset = {
+			"deathwish_wave_13"
+		}
+	}
+
+	Mods.hook.set("Gamemodes", "StateInGameRunning.event_game_started", function(func, ...)
+		func(...)
+		if Managers.player.is_server and slayertoken then
+			--23, 36 need to be silenced/unsilenced. Limitation due to being unable to fix 'once only' flow_event bug.
+			if Managers.matchmaking.lobby:get_stored_lobby_data().difficulty == "survival_hard" then
+				SurvivalSettings.survival_magnus_01.waves[23] = {
+					"magnus_deathwish_from_the_x_silent"
+				}
+
+				SurvivalSettings.dlc_01.waves[23] = {
+					"fall_deathwish_from_the_x_silent"
+				}
+				SurvivalSettings.survival_magnus_01.waves[36] = {
+					"magnus_deathwish_from_the_x_silent"
+				}
+
+				SurvivalSettings.dlc_01.waves[36] = {
+					"fall_deathwish_from_the_x_silent"
+				}
+			elseif Managers.matchmaking.lobby:get_stored_lobby_data().difficulty == "survival_harder" then
+				SurvivalSettings.survival_magnus_01.waves[23] = {
+					"magnus_deathwish_from_the_x"
+				}
+
+				SurvivalSettings.dlc_01.waves[23] = {
+					"fall_deathwish_from_the_x"
+				}
+				SurvivalSettings.survival_magnus_01.waves[36] = {
+					"magnus_deathwish_from_the_x_silent"
+				}
+
+				SurvivalSettings.dlc_01.waves[36] = {
+					"fall_deathwish_from_the_x_silent"
+				}
+			elseif Managers.matchmaking.lobby:get_stored_lobby_data().difficulty == "survival_hardest" then
+				SurvivalSettings.survival_magnus_01.waves[36] = {
+					"magnus_deathwish_from_the_x"
+				}
+
+				SurvivalSettings.dlc_01.waves[36] = {
+					"fall_deathwish_from_the_x"
+				}
+			end
+		end
+	end)
+
 	--End waves
+
+	Mods.hook.set("Gamemodes", "IngamePlayerListUI.set_difficulty_name", function(func, self, name)
+		local content = self.headers.content
+		if (name == "Veteran" or name == "Champion" or name == "Heroic") and slayertoken then
+			if name == "Heroic" and deathwishtoken and mutationtoken then
+				content.game_difficulty = "Deathwish Mutated Slayer's Oath"
+			elseif name == "Heroic" and deathwishtoken then
+				content.game_difficulty = "Deathwish Slayer's Oath"
+			elseif mutationtoken then
+				content.game_difficulty = name .. " Mutated Slayer's Oath"
+			else
+				content.game_difficulty = name .. " Slayer's Oath"
+			end
+		elseif (name == "Easy" or name == "Normal" or name == "Hard" or name == "Nightmare" or name == "Cataclysm") and onslaughttoken then
+			if name == "Cataclysm" and deathwishtoken and mutationtoken then
+				content.game_difficulty = "Deathwish Mutated Onslaught"
+			elseif name == "Cataclysm" and deathwishtoken then
+				content.game_difficulty = "Deathwish Onslaught"
+			elseif mutationtoken then
+				content.game_difficulty = name .. " Mutated Onslaught"
+			else
+				content.game_difficulty = name .. " Onslaught"
+			end
+		elseif (name == "Cataclysm" or name == "Heroic") and deathwishtoken then
+			if mutationtoken then
+				content.game_difficulty = "Deathwish Mutated"
+			else
+				content.game_difficulty = "Deathwish"
+			end
+		elseif mutationtoken and name ~= "" then
+			content.game_difficulty = name .. " Mutated"
+		else
+			content.game_difficulty = name
+		end
+		return
+	end)
+
+	Mods.hook.front("Gamemodes", "IngamePlayerListUI.set_difficulty_name")
 
 	Mods.hook.set("Gamemodes", "MatchmakingStateHostGame.host_game", function(func, self, next_level_key, difficulty, game_mode, private_game, required_progression)
 		func(self, next_level_key, difficulty, game_mode, private_game, required_progression)
@@ -5500,10 +5952,20 @@ if not slayertoken then
 				lobby_data.unique_server_name = "||DW MUTATED SLAYER'S OATH|| " .. string.sub(old_server_name,1,15)
 			elseif difficulty == "survival_hardest" and deathwishtoken then
 				lobby_data.unique_server_name = "||Deathwish Slayer's Oath|| " .. string.sub(old_server_name,1,17)
-			elseif mutationtoken then 
+			elseif mutationtoken then
 				lobby_data.unique_server_name = "||Mutated Slayer's Oath|| " .. string.sub(old_server_name,1,17)
 			else
 				lobby_data.unique_server_name = "||Slayer's Oath|| " .. string.sub(old_server_name,1,17)
+			end
+		elseif (difficulty == "easy" or difficulty == "normal" or difficulty == "hard" or difficulty == "harder" or difficulty == "hardest") and onslaughttoken then
+			if difficulty == "hardest" and deathwishtoken and mutationtoken then
+				lobby_data.unique_server_name = "||DW MUTATED ONSLAUGHT|| " .. string.sub(old_server_name,1,17)
+			elseif difficulty == "hardest" and deathwishtoken then
+				lobby_data.unique_server_name = "||Deathwish Onslaught|| " .. string.sub(old_server_name,1,17)
+			elseif mutationtoken then
+				lobby_data.unique_server_name = "||Mutated Onslaught|| " .. string.sub(old_server_name,1,17)
+			else
+				lobby_data.unique_server_name = "||Onslaught|| " .. string.sub(old_server_name,1,17)
 			end
 		elseif (difficulty == "hardest" or difficulty == "survival_hardest") and deathwishtoken then
 			if mutationtoken then
@@ -5529,6 +5991,10 @@ if not slayertoken then
 		mutationtoken = false
 	end
 
+	if not onslaughttoken then
+		onslaughttoken = false
+	end
+
 	local lobby_data = Managers.matchmaking.lobby:get_stored_lobby_data()
 	local old_server_name = LobbyAux.get_unique_server_name()
 
@@ -5537,10 +6003,20 @@ if not slayertoken then
 			lobby_data.unique_server_name = "||DW MUTATED SLAYER'S OATH|| " .. string.sub(old_server_name,1,15)
 		elseif lobby_data.difficulty == "survival_hardest" and deathwishtoken then
 			lobby_data.unique_server_name = "||Deathwish Slayer's Oath|| " .. string.sub(old_server_name,1,17)
-		elseif mutationtoken then 
+		elseif mutationtoken then
 			lobby_data.unique_server_name = "||Mutated Slayer's Oath|| " .. string.sub(old_server_name,1,17)
 		else
 			lobby_data.unique_server_name = "||Slayer's Oath|| " .. string.sub(old_server_name,1,17)
+		end
+	elseif (lobby_data.difficulty == "easy" or lobby_data.difficulty == "normal" or lobby_data.difficulty == "hard" or lobby_data.difficulty == "harder" or lobby_data.difficulty == "hardest") and onslaughttoken then
+		if lobby_data.difficulty == "hardest" and deathwishtoken and mutationtoken then
+			lobby_data.unique_server_name = "||DW MUTATED ONSLAUGHT|| " .. string.sub(old_server_name,1,17)
+		elseif lobby_data.difficulty == "hardest" and deathwishtoken then
+			lobby_data.unique_server_name = "||Deathwish Onslaught|| " .. string.sub(old_server_name,1,17)
+		elseif mutationtoken then
+			lobby_data.unique_server_name = "||Mutated Onslaught|| " .. string.sub(old_server_name,1,17)
+		else
+			lobby_data.unique_server_name = "||Onslaught|| " .. string.sub(old_server_name,1,17)
 		end
 	elseif (lobby_data.difficulty == "hardest" or lobby_data.difficulty == "survival_hardest") and deathwishtoken then
 		if mutationtoken then
@@ -5581,7 +6057,7 @@ if not slayertoken then
 
 		local original_member_func = Managers.chat.channels[1].members_func
 		Managers.chat.channels[1].members_func = member_func
-		
+
 		if (lobby_data.difficulty == "survival_hard" or lobby_data.difficulty == "survival_harder" or lobby_data.difficulty == "survival_hardest") and slayertoken then
 			if lobby_data.difficulty == "survival_hardest" and deathwishtoken and mutationtoken then
 				Mods.whisper.last_whisper = "[Automated message] This lobby has the following difficulty mod active : Slayer's Oath waveset, Deathwish difficulty, Stormvermin Mutation. Yeah, they're suicidal."
@@ -5594,6 +6070,20 @@ if not slayertoken then
 				Managers.chat:send_system_chat_message(1, Mods.whisper.last_whisper, 0, true)
 			else
 				Mods.whisper.last_whisper = "[Automated message] This lobby has the following difficulty mod active : Slayer's Oath waveset."
+				Managers.chat:send_system_chat_message(1, Mods.whisper.last_whisper, 0, true)
+			end
+		elseif (lobby_data.difficulty == "easy" or lobby_data.difficulty == "normal" or lobby_data.difficulty == "hard" or lobby_data.difficulty == "harder" or lobby_data.difficulty == "hardest") and onslaughttoken then
+			if lobby_data.difficulty == "hardest" and deathwishtoken and mutationtoken then
+				Mods.whisper.last_whisper = "[Automated message] This lobby has the following difficulty mod active : Onslaught, Deathwish difficulty, Stormvermin Mutation. Yeah, they're suicidal."
+				Managers.chat:send_system_chat_message(1, Mods.whisper.last_whisper, 0, true)
+			elseif lobby_data.difficulty == "hardest" and deathwishtoken then
+				Mods.whisper.last_whisper = "[Automated message] This lobby has the following difficulty mod active : Onslaught, Deathwish difficulty. Die with honor, hero."
+				Managers.chat:send_system_chat_message(1, Mods.whisper.last_whisper, 0, true)
+			elseif mutationtoken then
+				Mods.whisper.last_whisper = "[Automated message] This lobby has the following difficulty mod active : Onslaught, Stormvermin Mutation."
+				Managers.chat:send_system_chat_message(1, Mods.whisper.last_whisper, 0, true)
+			else
+				Mods.whisper.last_whisper = "[Automated message] This lobby has the following difficulty mod active : Onslaught."
 				Managers.chat:send_system_chat_message(1, Mods.whisper.last_whisper, 0, true)
 			end
 		elseif (lobby_data.difficulty == "hardest" or lobby_data.difficulty == "survival_hardest") and deathwishtoken then
@@ -5616,166 +6106,15 @@ if not slayertoken then
 
 	Mods.hook.front("Gamemodes", "MatchmakingManager.rpc_matchmaking_request_join_lobby")
 	--End whispers
-	
+
 	Managers.chat:send_system_chat_message(1, "Last Stand : Slayer's Oath waveset ENABLED.", 0, true)
 else
 	slayertoken = false
 
-	--Magnus
-	SurvivalSettings.survival_magnus_01.waves[27] = {
-		"nightmare_easy_a",
-		reset = {
-			"nightmare_easy_a"
-		}
-	}
+	SurvivalSettings.survival_magnus_01.waves = OriginalMagnusWaveset
+	SurvivalSettings.dlc_01.waves = OriginalFallWaveset
 
-	SurvivalSettings.survival_magnus_01.waves[28] = {
-		"nightmare_easy_b",
-		reset = {
-			"nightmare_easy_b"
-		}
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[29] = {
-		"magnus_flush"
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[30] = {
-		"magnus_special_a",
-		reset = {
-			"magnus_special_a"
-		}
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[31] = {
-		"magnus_main"
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[32] = {
-		"magnus_main"
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[33] = {
-		"magnus_boss",
-		reset = {
-			"magnus_boss"
-		}
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[34] = {
-		"magnus_main"
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[35] = {
-		"magnus_main"
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[36] = {
-		"magnus_cataclysm_special"
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[37] = {
-		"magnus_main",
-		reset = {
-			"magnus_main"
-		}
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[38] = {
-		"magnus_cataclysm_special",
-		reset = {
-			"magnus_cataclysm_special"
-		}
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[39] = {
-		"magnus_nightmare_thirteen",
-		reset = {
-			"magnus_nightmare_thirteen"
-		}
-	}
-
-	SurvivalSettings.survival_magnus_01.waves[40] = {
-		"magnus_cataclysm_special_02"
-	}
-
-	--Fall
-	SurvivalSettings.dlc_01.waves[27] = {
-		"nightmare_easy_a",
-		reset = {
-			"nightmare_easy_a"
-		}
-	}
-
-	SurvivalSettings.dlc_01.waves[28] = {
-		"nightmare_easy_b",
-		reset = {
-			"nightmare_easy_b"
-		}
-	}
-
-	SurvivalSettings.dlc_01.waves[29] = {
-		"flush"
-	}
-
-	SurvivalSettings.dlc_01.waves[30] = {
-		"special_a",
-		reset = {
-			"special_a"
-		}
-	}
-
-	SurvivalSettings.dlc_01.waves[31] = {
-		"main"
-	}
-
-	SurvivalSettings.dlc_01.waves[32] = {
-		"main"
-	}
-
-	SurvivalSettings.dlc_01.waves[33] = {
-		"boss",
-		reset = {
-			"boss"
-		}
-	}
-
-	SurvivalSettings.dlc_01.waves[34] = {
-		"main"
-	}
-
-	SurvivalSettings.dlc_01.waves[35] = {
-		"main"
-	}
-
-	SurvivalSettings.dlc_01.waves[36] = {
-		"cataclysm_special"
-	}
-
-	SurvivalSettings.dlc_01.waves[37] = {
-		"main",
-		reset = {
-			"main"
-		}
-	}
-
-	SurvivalSettings.dlc_01.waves[38] = {
-		"cataclysm_special",
-		reset = {
-			"cataclysm_special"
-		}
-	}
-
-	SurvivalSettings.dlc_01.waves[39] = {
-		"nightmare_thirteen",
-		reset = {
-			"nightmare_thirteen"
-		}
-	}
-
-	SurvivalSettings.dlc_01.waves[40] = {
-		"magnus_cataclysm_special_02"
-	}
+	Mods.hook.enable(false, "Gamemodes", "StateInGameRunning.event_game_started")
 
 	--Instant set lobby data
 	local lobby_data = Managers.matchmaking.lobby:get_stored_lobby_data()
@@ -5786,10 +6125,20 @@ else
 			lobby_data.unique_server_name = "||DW MUTATED SLAYER'S OATH|| " .. string.sub(old_server_name,1,15)
 		elseif lobby_data.difficulty == "survival_hardest" and deathwishtoken then
 			lobby_data.unique_server_name = "||Deathwish Slayer's Oath|| " .. string.sub(old_server_name,1,17)
-		elseif mutationtoken then 
+		elseif mutationtoken then
 			lobby_data.unique_server_name = "||Mutated Slayer's Oath|| " .. string.sub(old_server_name,1,17)
 		else
 			lobby_data.unique_server_name = "||Slayer's Oath|| " .. string.sub(old_server_name,1,17)
+		end
+	elseif (lobby_data.difficulty == "easy" or lobby_data.difficulty == "normal" or lobby_data.difficulty == "hard" or lobby_data.difficulty == "harder" or lobby_data.difficulty == "hardest") and onslaughttoken then
+		if lobby_data.difficulty == "hardest" and deathwishtoken and mutationtoken then
+			lobby_data.unique_server_name = "||DW MUTATED ONSLAUGHT|| " .. string.sub(old_server_name,1,17)
+		elseif lobby_data.difficulty == "hardest" and deathwishtoken then
+			lobby_data.unique_server_name = "||Deathwish Onslaught|| " .. string.sub(old_server_name,1,17)
+		elseif mutationtoken then
+			lobby_data.unique_server_name = "||Mutated Onslaught|| " .. string.sub(old_server_name,1,17)
+		else
+			lobby_data.unique_server_name = "||Onslaught|| " .. string.sub(old_server_name,1,17)
 		end
 	elseif (lobby_data.difficulty == "hardest" or lobby_data.difficulty == "survival_hardest") and deathwishtoken then
 		if mutationtoken then

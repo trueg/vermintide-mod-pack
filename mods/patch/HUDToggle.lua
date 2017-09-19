@@ -7,7 +7,7 @@ local save = Application.save_user_settings
 local oi = OptionsInjector
 
 local function get_setting(key)
-	if HUDControl.settings[key] then 
+	if HUDControl.settings[key] then
 		return get(HUDControl.settings[key].save)
 	else
 		return nil
@@ -23,14 +23,14 @@ local function get_settings()
 end
 
 local function set_setting(key, value)
-	if HUDControl.settings[key] then 
+	if HUDControl.settings[key] then
 		set(HUDControl.settings[key].save, value)
 		save()
 	end
 end
 
 local function set_setting_i(i, value)
-	if HUDControl.setting_strings[i] then 
+	if HUDControl.setting_strings[i] then
 		set(HUDControl.setting_strings[i], value)
 		save()
 	end
@@ -80,12 +80,14 @@ local function check_visibility()
 end
 
 local function create_options()
-	Mods.option_menu:add_group("hudtoggle", "HUD Toggler")
-	Mods.option_menu:add_item("hudtoggle", HUDControl.settings["TOGGLE"], true)
-	Mods.option_menu:add_item("hudtoggle", HUDControl.settings["MORE"], true)
-	Mods.option_menu:add_item("hudtoggle", HUDControl.settings["LESS"], true)
+	Mods.option_menu:add_group("hud_group", "HUD Related Mods")
+
+	Mods.option_menu:add_item("hud_group", HUDControl.settings["SUB_GROUP"], true)
+	Mods.option_menu:add_item("hud_group", HUDControl.settings["TOGGLE"])
+	Mods.option_menu:add_item("hud_group", HUDControl.settings["MORE"])
+	Mods.option_menu:add_item("hud_group", HUDControl.settings["LESS"])
 	for i,v in ipairs(HUDControl.settings_sorted) do
-		Mods.option_menu:add_item("hudtoggle", HUDControl.settings[v], true)
+		Mods.option_menu:add_item("hud_group", HUDControl.settings[v])
 	end
 end
 
@@ -113,12 +115,52 @@ HUDControl = {
 
 		"WEAPON",
 	},
-	visible = true,	
+	visible = true,
 	hud_set = false,
 	camera_set = false,
 	outlines_set = false
 }
 HUDControl.settings = {
+	SUB_GROUP = {
+		["save"] = "cb_hudtoggle_subgroup",
+		["widget_type"] = "dropdown_checkbox",
+		["text"] = "HUD Toggler",
+		["default"] = false,
+		["hide_options"] = {
+			{
+				true,
+				mode = "show",
+				options = {
+					"cb_hud_elements",
+					"cb_hud_objectives",
+					"cb_hud_outlines",
+					"cb_hud_crosshair",
+					"cb_hud_ping",
+					"cb_hud_feedback",
+					"cb_hud_weapon",
+					"cb_hud_toggle",
+					"cb_hud_more",
+					"cb_hud_less"
+				},
+			},
+			{
+				false,
+				mode = "hide",
+				options = {
+					"cb_hud_elements",
+					"cb_hud_objectives",
+					"cb_hud_outlines",
+					"cb_hud_crosshair",
+					"cb_hud_ping",
+					"cb_hud_feedback",
+					"cb_hud_weapon",
+					"cb_hud_toggle",
+					"cb_hud_more",
+					"cb_hud_less"
+				},
+			},
+		},
+	},
 	ELEMENTS = {
 		["save"] = HUDControl.setting_strings[1],
 		["widget_type"] = "stepper",
@@ -260,7 +302,7 @@ end
 HUDControl.more = function()
 	local mode = HUDControl.mode
 	local decrease = mode == 6 and 2 or 1
-	if mode <= 0 then decrease = 0 end	
+	if mode <= 0 then decrease = 0 end
 	for i = mode - decrease + 1, #HUDControl.settings_sorted do
 		set_setting_i(i, true)
 	end
@@ -300,7 +342,7 @@ Mods.hook.set(mod_name, "IngameHud.set_visible", function(func, self, orig_visib
 	if get_setting("ELEMENTS") then
 		return func(self, orig_visible)
 	end
-	
+
 	local visible = false
 	if self.player_inventory_ui then
 		self.player_inventory_ui:set_visible(visible)
@@ -368,11 +410,11 @@ Mods.hook.set(mod_name, "IngameUI.update", function(func, self, ...)
 	end
 end)
 
---Hiding Last Stand timer		
-Mods.hook.set(mod_name, "GameTimerUI.update", function (func, ...)		
-	if get_setting("ELEMENTS") then		
-		return func(...)		
-	end		
+--Hiding Last Stand timer
+Mods.hook.set(mod_name, "GameTimerUI.update", function (func, ...)
+	if get_setting("ELEMENTS") then
+		return func(...)
+	end
 end)
 
 --Hiding contracts log
@@ -435,7 +477,7 @@ end)
 --Hiding hands and weapon
 Mods.hook.set(mod_name, "PlayerUnitFirstPerson.update", function (func, self, unit, input, dt, context, t)
 	func(self, unit, input, dt, context, t)
-	
+
 	if not get_setting("WEAPON") then
 		self.inventory_extension:show_first_person_inventory(false)
 		self.inventory_extension:show_first_person_inventory_lights(false)
@@ -467,11 +509,11 @@ Mods.hook.set(mod_name, "OutlineSystem.update", function(func, self, ...)
 	end
 
 	if #self.units == 0 then
-		return 
+		return
 	end
 
 	if script_data.disable_outlines then
-		return 
+		return
 	end
 
 	local checks_per_frame = 4

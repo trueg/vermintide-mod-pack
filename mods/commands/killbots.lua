@@ -8,7 +8,7 @@ end
 
 for i, player in pairs(Managers.player:bots()) do
 	local status_extension = nil
-	if player.player_unit then 
+	if player.player_unit then
 		status_extension = ScriptUnit.extension(player.player_unit, "status_system")
 	end
 	if status_extension and not status_extension.is_ready_for_assisted_respawn(status_extension) then

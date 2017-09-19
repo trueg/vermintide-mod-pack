@@ -54,7 +54,7 @@ local function validate_action(unit, action_name, sub_action_name, action_settin
 		end
 	end
 
-	return 
+	return
 end
 
 local weapon_action_interrupt_damage_types = {
@@ -75,7 +75,7 @@ Mods.hook.set(mod_name, "CharacterStateHelper.update_weapon_actions", function(f
 	if not item_data then
 		Profiler.stop("weapon_action")
 
-		return 
+		return
 	end
 
 	local new_action, new_sub_action, current_action_settings, current_action_extension, current_action_hand = nil
@@ -117,7 +117,7 @@ Mods.hook.set(mod_name, "CharacterStateHelper.update_weapon_actions", function(f
 			status_extension.set_pushed(status_extension, true)
 			Profiler.stop("weapon_action")
 
-			return 
+			return
 		end
 	end
 
@@ -206,7 +206,7 @@ Mods.hook.set(mod_name, "CharacterStateHelper.update_weapon_actions", function(f
 		if weapon_action_hand == "both" then
 			Profiler.stop("weapon_action")
 
-			return 
+			return
 		end
 
 		if weapon_action_hand == "either" then
@@ -230,7 +230,7 @@ Mods.hook.set(mod_name, "CharacterStateHelper.update_weapon_actions", function(f
 			left_hand_weapon_extension.start_action(left_hand_weapon_extension, new_action, new_sub_action, item_template.actions, t)
 			Profiler.stop("weapon_action")
 
-			return 
+			return
 		end
 
 		assert(right_hand_weapon_extension, "tried to start a right hand weapon action without a right hand wielded unit")
@@ -244,7 +244,7 @@ Mods.hook.set(mod_name, "CharacterStateHelper.update_weapon_actions", function(f
 
 	Profiler.stop("weapon_action")
 
-	return 
+	return
 end)
 
 local empty_table = {}
@@ -295,7 +295,7 @@ Mods.hook.set(mod_name, "CharacterStateHelper._get_chain_action_data", function(
 			if slot ~= current_slot then
 				local wield_input = slot.wield_input
 				local name = slot.name
-				
+
 				if equipment.slots[name] and CharacterStateHelper.get_buffered_input(wield_input, input_extension) then
 					need_to_switch = true
 					break
@@ -419,7 +419,7 @@ local function create_options()
 
 	Mods.option_menu:add_item("weapon_switching", MOD_SETTINGS.WEAPONSWITCHING, true)
 end
- 
+
 local status, err = pcall(create_options)
 if err ~= nil then
 	EchoConsole(err)

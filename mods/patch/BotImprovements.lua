@@ -816,7 +816,7 @@ BTConditions.can_loot_pinged_item = function (blackboard)
 		-- Check if bot already has a tome
 		if health_slot_data ~= nil then
 			local item = inventory_ext.get_item_template(inventory_ext, health_slot_data)
-  			if item.name == "wpn_side_objective_tome_01" then
+			if item.name == "wpn_side_objective_tome_01" then
 				return false
 			end
 		end
@@ -1262,7 +1262,7 @@ Mods.hook.set(mod_name, "AIBotGroupSystem._update_health_pickups", function(func
 		local health_extension = ScriptUnit.extension(unit, "health_system")
 		local inventory_ext = ScriptUnit.extension(unit, "inventory_system")
 		local health_slot_data = inventory_ext.get_slot_data(inventory_ext, "slot_healthkit")
- 		local status_extension = ScriptUnit.extension(unit, "status_system")
+		local status_extension = ScriptUnit.extension(unit, "status_system")
 		local current_health = 1
 		local healthy = true
 
@@ -1296,7 +1296,7 @@ Mods.hook.set(mod_name, "AIBotGroupSystem._update_health_pickups", function(func
 				local health_extension = ScriptUnit.extension(unit, "health_system")
 				local inventory_ext = ScriptUnit.extension(unit, "inventory_system")
 				local health_slot_data = inventory_ext.get_slot_data(inventory_ext, "slot_healthkit")
- 				local status_extension = ScriptUnit.extension(unit, "status_system")
+				local status_extension = ScriptUnit.extension(unit, "status_system")
 				local current_health = 1
 				local healthy = true
 

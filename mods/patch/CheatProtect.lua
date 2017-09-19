@@ -18,7 +18,7 @@ function(func, self, sender, go_id, slot_id, item_name_id)
 		local unit_storage = Managers.state.unit_spawner.unit_storage
 		local items = unit_storage.map_goid_to_unit
 		local count = 0
-	
+
 		for go_id, unit in pairs(items) do
 			count = count + 1
 		end
@@ -53,7 +53,7 @@ function(func, self, sender, pickup_name_id, position, rotation, spawn_type_id)
 	local unit_storage = Managers.state.unit_spawner.unit_storage
 	local items = unit_storage.map_goid_to_unit
 	local count = 0
-	
+
 	for go_id, unit in pairs(items) do
 		count = count + 1
 	end
@@ -72,7 +72,7 @@ function(func, self, sender, pickup_name_id, position, rotation, spawn_type_id)
 		local status_extension = ScriptUnit.extension(player.player_unit, "status_system")
 		local position = POSITION_LOOKUP[player.player_unit]
 		local is_a_trade = false
-		
+
 		if NoCheatTrade[sender] then
 			for i, item in pairs(NoCheatTrade[sender]) do
 				if item == pickup_name_id and not is_a_trade then
@@ -138,14 +138,14 @@ function(func, self, sender, unit_go_id, heal_amount, heal_type_id)
 	local health_extension = ScriptUnit.extension(unit, "health_system")
 	local current_damage = health_extension.current_damage(health_extension)
 
-	if (heal_amount > 120 and heal_type ~= "buff") 
+	if (heal_amount > 120 and heal_type ~= "buff")
 	or (heal_type == "bandage" and heal_amount ~= round(current_damage * 0.8, 3))
-	or (heal_type == "proc" and heal_amount ~= 5 and heal_amount ~= 10 and heal_amount ~= 40) 
-	or (heal_type == "healing_draught" and heal_amount ~= 75) 
+	or (heal_type == "proc" and heal_amount ~= 5 and heal_amount ~= 10 and heal_amount ~= 40)
+	or (heal_type == "healing_draught" and heal_amount ~= 75)
 	or (heal_type == "bandage_trinket" and heal_amount > round(current_damage * 0.2, 3))
 	or (heal_type == "potion" or heal_type == "buff_shared_medpack" or heal_type == "heal_on_killing_blow")
 	or (heal_type == "buff" and (heal_amount ~= 150 and heal_amount ~= 100))
-	or (heal_type == "buff" and Managers.state.game_mode._game_mode_key ~= "inn") then 
+	or (heal_type == "buff" and Managers.state.game_mode._game_mode_key ~= "inn") then
 		Managers.chat:send_system_chat_message(1, "CheatProtect : Blocked player '" .. player._cached_name .. "' attempted heal for " .. heal_amount .. " with heal type " .. heal_type .. ".", 0, true)
 		return
 	end
@@ -161,7 +161,7 @@ Mods.hook.set(mod_name, "LocomotionSystem.rpc_teleport_unit_to", function(func, 
 	local local_player = Managers.player:local_player()
 	local target_unit = self.unit_storage:unit(game_object_id)
 	local player = Managers.player:player_from_peer_id(sender, 1)
-	
+
 	-- Server can not get this rpc call
 	-- Nobody can teleport you to a different position
 	if Managers.player.is_server or (target_unit and local_player and local_player.player_unit == target_unit) then
@@ -179,7 +179,7 @@ Mods.hook.set(mod_name, "LocomotionSystem.rpc_teleport_unit_to", function(func, 
 		end
 		return
 	end
-	
+
 	func(self, sender, game_object_id, position, rotation)
 end)
 
@@ -193,7 +193,7 @@ function(func, self, sender, channel_id, message_sender, message, localization_p
 		if sender ~= message_sender then
 			local player = Managers.player:player_from_peer_id(sender, 1)
 			local victim = Managers.player:player_from_peer_id(message_sender, 1)
-			
+
 			if player and victim then
 				-- Cheater Detected
 				Managers.chat:send_system_chat_message(1, "CheatProtect : Blocked player '" .. player._cached_name .. "' attempted chat impersonation of player '" .. victim._cached_name .. "'.", 0, true)
@@ -209,12 +209,12 @@ function(func, self, sender, channel_id, message_sender, message, localization_p
 			not know for sure who it officially sended the orginal message.
 		]]--
 		local local_player = Managers.player:local_player()
-		
+
 		if local_player and local_player.peer_id == message_sender then
 			-- Cheater Detected
 			Managers.chat:send_system_chat_message(1, "CheatProtect [By " .. local_player._cached_name .. "] : The above message by " .. local_player._cached_name .. " was not sent by that player, but by an impersonator in the lobby.", 0, true)
 		end
 	end
-	
+
 	func(self, sender, channel_id, message_sender, message, localization_param, is_system_message, pop_chat, is_dev)
 end)

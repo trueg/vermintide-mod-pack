@@ -1,8 +1,8 @@
- 
+
 local oi = OptionsInjector
- 
+
 local mod_name = "SaverGrimDiscard"
- 
+
 SaverGrimDiscard = {
     MOD_SETTINGS = {
         ACTIVE = {
@@ -21,19 +21,19 @@ SaverGrimDiscard = {
         },
     }
 }
- 
+
 local me = SaverGrimDiscard
- 
+
 local get = function(data)
     return Application.user_setting(data.save)
 end
 local set = Application.set_user_setting
 local save = Application.save_user_settings
- 
+
 me.skip_next_fade = false
- 
+
 me.orig_template = table.clone(Weapons.wpn_grimoire_01)
- 
+
 me.update = function()
     if get(me.MOD_SETTINGS.ACTIVE) then
         Weapons.wpn_grimoire_01.actions["action_one"]["default"] = {
@@ -94,33 +94,33 @@ me.update = function()
         Weapons.wpn_grimoire_01 = table.clone(me.orig_template)
     end
 end
- 
+
 -- ####################################################################################################################
 -- ##### Options ######################################################################################################
 -- ####################################################################################################################
- 
+
 SaverGrimDiscard.create_options = function()
     Mods.option_menu:add_group("saver_grim_discard", "Grimoire Discard Saver")
- 
+
     Mods.option_menu:add_item("saver_grim_discard", me.MOD_SETTINGS.ACTIVE, true)
 end
- 
+
 -- ####################################################################################################################
 -- ##### Hook #########################################################################################################
 -- ####################################################################################################################
- 
+
 Mods.hook.set(mod_name, "OptionsView.exit", function(orig_func, self)
     orig_func(self)
-   
+
     me.update()
 end)
- 
+
 Mods.hook.set(mod_name, "StateInGameRunning.event_game_started", function(orig_func, self)
     orig_func(self)
- 
+
     me.update()
 end)
- 
+
 -- ####################################################################################################################
 -- ##### Start ########################################################################################################
 -- ####################################################################################################################

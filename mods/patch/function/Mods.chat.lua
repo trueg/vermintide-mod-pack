@@ -1,9 +1,9 @@
 Mods.chat = {
 	message = "",
-	
+
 	update = function(message)
 		Mods.chat.message = message
-		
+
 		-- Check action settings
 		for _, item in ipairs(Mods.commands) do
 			if type(item[1]) == "string" then
@@ -28,7 +28,7 @@ Mods.chat = {
 				end
 			end
 		end
-		
+
 		return true
 	end,
 }
@@ -43,6 +43,6 @@ Mods.hook.set(mod_name, "ChatManager.send_chat_message", function(func, self, ch
 	if Mods.chat.update(message) then
 		func(self, channel_id, message)
 	end
-	
-	return 
+
+	return
 end)
