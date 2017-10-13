@@ -26,6 +26,19 @@ BotImprovements = {
 			},
 			["default"] = 2, -- Default second option is enabled. In this case On
 		},
+		OVERRIDE_LEFT_PLAYER = {
+			["save"] = "cb_override_left_player",
+			["widget_type"] = "stepper",
+			["text"] = "Override Leaving Player Bot",
+			["tooltip"] =  "Override Leaving Player Bot\n" ..
+				"Reverts back to default bot if a player leaves with the normally unused bot (Saltzpyre or Sienna, depending on above setting).",
+			["value_type"] = "boolean",
+			["options"] = {
+				{text = "Off", value = false},
+				{text = "On", value = true},
+			},
+			["default"] = 2, -- Default first option is enabled. In this case On
+		},
 		STAY_CLOSER = {
 			["save"] = "cb_bot_improvements_stay_closer",
 			["widget_type"] = "stepper",
@@ -327,6 +340,51 @@ BotImprovements = {
 			},
 			["default"] = 1, -- Default first option is enabled. In this case Off
 		},
+		AUTOEQUIP = {
+			["save"] = "cb_autoequip",
+			["widget_type"] = "stepper",
+			["text"] = "Autoequip bots from a loadout slot",
+			["tooltip"] =  "Autoequip bots from a loadout slot\n" ..
+				"Autoequip bots from a dedicated loadout slot.",
+			["value_type"] = "boolean",
+			["options"] = {
+				{text = "Off", value = false},
+				{text = "On", value = true},
+			},
+			["default"] = 1, -- Default first option is enabled. In this case Off
+			["hide_options"] = {
+				{
+					false,
+					mode = "hide",
+					options = {
+						"cb_autoequip_slot",
+					}
+				},
+				{
+					true,
+					mode = "show",
+					options = {
+						"cb_autoequip_slot",
+					}
+				},
+			},
+		},
+		AUTOEQUIP_SLOT = {
+			["save"] = "cb_autoequip_slot",
+			["widget_type"] = "stepper",
+			["text"] = "Loadout slot to use",
+			["tooltip"] = "Loadout slot to use\n" ..
+				"Autoequip bot from this loadout slot.",
+			["value_type"] = "number",
+			["options"] = (function()
+					local stepper = {}
+					for i=1,9 do
+						table.insert(stepper, {text = tostring(i), value = i})
+					end
+					return stepper
+					end)(),
+			["default"] = 1, -- Default to 1
+		},
 	},
 }
 
@@ -348,6 +406,7 @@ BotImprovements.create_options = function()
 	Mods.option_menu:add_group("bot_improvements", "Bot Improvements")
 
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.PREFER_SALTZBOT, true)
+	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.OVERRIDE_LEFT_PLAYER, true)
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.STAY_CLOSER, true)
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.NO_CHASE_RATLING, true)
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.NO_CHASE_GLOBADIER, true)
@@ -369,6 +428,8 @@ BotImprovements.create_options = function()
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.FIX_REVIVE, true)
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.REDUCE_PICKUP_TRAVEL, true)
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.FOLLOW, true)
+	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.AUTOEQUIP, true)
+	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.AUTOEQUIP_SLOT)
 end
 
 -- ####################################################################################################################
@@ -1426,6 +1487,209 @@ function (func, self, bot_ai_data, points, follow_unit, follow_unit_table)
 		end
 	end
 end)
+
+-- ####################################################################################################################
+-- ##### don't use wizard bot when wizard player laeves ###############################################################
+-- ####################################################################################################################
+local NUM_PLAYERS = 4
+local CONSUMABLE_SLOTS = {
+	"slot_healthkit",
+	"slot_potion",
+	"slot_grenade"
+}
+
+Mods.hook.set(mod_name, "SpawnManager._update_bot_spawns", function (func, self, dt, t)
+	if not get(me.SETTINGS.OVERRIDE_LEFT_PLAYER) then
+		return func(self, dt, t)
+	end
+
+	local player_manager = Managers.player
+	local profile_synchronizer = self._profile_synchronizer
+	local available_profile_order = self._available_profile_order
+	local available_profiles = self._available_profiles
+	local profile_release_list = self._bot_profile_release_list
+	local delta, humans, bots = self._update_available_profiles(self, profile_synchronizer, available_profile_order, available_profiles)
+
+	for local_player_id, bot_player in pairs(self._bot_players) do
+		local profile_index = bot_player.profile_index
+
+		if not available_profiles[profile_index] then
+			local peer_id = bot_player.network_id(bot_player)
+			local local_player_id = bot_player.local_player_id(bot_player)
+			profile_release_list[profile_index] = true
+			local bot_unit = bot_player.player_unit
+
+			if bot_unit then
+				bot_player.despawn(bot_player)
+			end
+
+			local status_slot_index = bot_player.status_slot_index
+
+			self._free_status_slot(self, status_slot_index)
+			player_manager.remove_player(player_manager, peer_id, local_player_id)
+
+			self._bot_players[local_player_id] = nil
+		end
+	end
+
+	local allowed_bots = math.min(NUM_PLAYERS - humans, (not script_data.ai_bots_disabled or 0) and (script_data.cap_num_bots or NUM_PLAYERS))
+	local bot_delta = allowed_bots - bots
+	local local_peer_id = Network.peer_id()
+
+	if 0 < bot_delta then
+		local i = 1
+		local bots_spawned = 0
+
+		available_profile_order = {}
+		for _,profile_index in ipairs((get(me.SETTINGS.PREFER_SALTZBOT) and {5,4,3,1,2}) or {5,4,3,2,1}) do
+			if available_profiles[profile_index] then
+				table.insert(available_profile_order, profile_index)
+			end
+		end
+
+		while bots_spawned < bot_delta do
+			local profile_index = available_profile_order[i]
+
+			fassert(profile_index, "Tried to add more bots than there are profiles available")
+
+			local owner_type = profile_synchronizer.owner_type(profile_synchronizer, profile_index)
+
+			if owner_type == "available" then
+				local local_player_id = player_manager.next_available_local_player_id(player_manager, local_peer_id)
+				local bot_player = player_manager.add_bot_player(player_manager, SPProfiles[profile_index].display_name, local_peer_id, "default", profile_index, local_player_id)
+				local is_initial_spawn, status_slot_index = self._assign_status_slot(self, local_peer_id, local_player_id, profile_index)
+				bot_player.status_slot_index = status_slot_index
+
+				profile_synchronizer.set_profile_peer_id(profile_synchronizer, profile_index, local_peer_id, local_player_id)
+				bot_player.create_game_object(bot_player)
+
+				self._bot_players[local_player_id] = bot_player
+				self._spawn_list[#self._spawn_list + 1] = bot_player
+				bots_spawned = bots_spawned + 1
+				self._forced_bot_profile_index = nil
+			end
+
+			i = i + 1
+		end
+	elseif bot_delta < 0 then
+		local bots_despawned = 0
+		local i = 1
+
+		while bots_despawned < -bot_delta do
+			local profile_index = available_profile_order[i]
+
+			fassert(profile_index, "Tried to remove more bots than there are profiles belonging to bots")
+
+			local owner_type = profile_synchronizer.owner_type(profile_synchronizer, profile_index)
+
+			if owner_type == "bot" then
+				local bot_player, bot_local_player_id = nil
+
+				for local_player_id, player in pairs(self._bot_players) do
+					if player.profile_index == profile_index then
+						bot_player = player
+						bot_local_player_id = local_player_id
+
+						break
+					end
+				end
+
+				fassert(bot_player, "Did not find bot player with profile_index profile_index %i", profile_index)
+
+				profile_release_list[profile_index] = true
+				local bot_unit = bot_player.player_unit
+
+				if bot_unit then
+					bot_player.despawn(bot_player)
+				end
+
+				local status_slot_index = bot_player.status_slot_index
+
+				self._free_status_slot(self, status_slot_index)
+				player_manager.remove_player(player_manager, local_peer_id, bot_local_player_id)
+
+				self._bot_players[bot_local_player_id] = nil
+				bots_despawned = bots_despawned + 1
+			end
+
+			i = i + 1
+		end
+	end
+
+	local statuses = self._player_statuses
+
+	if self._network_server:has_all_peers_loaded_packages() then
+		for _, bot_player in ipairs(self._spawn_list) do
+			local bot_local_player_id = bot_player.local_player_id(bot_player)
+			local bot_peer_id = bot_player.network_id(bot_player)
+
+			if player_manager.player(player_manager, bot_peer_id, bot_local_player_id) == bot_player then
+				local status_slot_index = bot_player.status_slot_index
+				local status = statuses[status_slot_index]
+				local position = status.position:unbox()
+				local rotation = status.rotation:unbox()
+				local is_initial_spawn = false
+
+				if status.health_state ~= "dead" and status.health_state ~= "respawn" and status.health_state ~= "respawning" then
+					local consumables = status.consumables
+					local ammo = status.ammo
+
+					bot_player.spawn(bot_player, position, rotation, is_initial_spawn, ammo.slot_melee, ammo.slot_ranged, consumables[CONSUMABLE_SLOTS[1]], consumables[CONSUMABLE_SLOTS[2]], consumables[CONSUMABLE_SLOTS[3]])
+				end
+
+				status.spawn_state = "spawned"
+			end
+		end
+
+		table.clear(self._spawn_list)
+	end
+
+	return
+end)
+Mods.hook.front(mod_name, "SpawnManager._update_bot_spawns")
+
+-- ####################################################################################################################
+-- ##### autoequip bots from a dedicated loadout slot #################################################################
+-- ####################################################################################################################
+local LOADOUT_SETTING = "cb_saved_loadouts"
+Mods.hook.set(mod_name, "BackendUtils.get_loadout_item", function (func, profile, slot)
+	if not get(me.SETTINGS.AUTOEQUIP) then
+		return func(profile, slot)
+	end
+
+	if profile == "all" then
+		return
+	end
+
+	local profile_index = 0
+	for _,profile_data in ipairs(SPProfiles) do
+		profile_index = profile_index + 1
+		if profile_data.display_name == profile then
+			break
+		end
+	end
+
+	local item_data = nil
+
+	if SPProfiles[profile_index] and Managers.state.network then
+		if Managers.state.network.profile_synchronizer:owner_type(profile_index) == "bot" then
+			local loadout = Application.user_setting(LOADOUT_SETTING, profile, get(me.SETTINGS.AUTOEQUIP_SLOT))
+			local backend_id = loadout and loadout[slot] or nil
+			if backend_id and ScriptBackendItem.get_key(backend_id) then
+				item_data = BackendUtils.get_item_from_masterlist(backend_id) or nil
+			end
+			if item_data then
+				return item_data
+			end
+		end
+	end
+
+	local backend_id = ScriptBackendItem.get_loadout_item_id(profile, slot)
+	item_data = (backend_id and BackendUtils.get_item_from_masterlist(backend_id)) or nil
+
+	return item_data
+end)
+Mods.hook.front(mod_name, "BackendUtils.get_loadout_item")
 
 -- ####################################################################################################################
 -- ##### Start ########################################################################################################

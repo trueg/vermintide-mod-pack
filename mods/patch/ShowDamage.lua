@@ -14,7 +14,7 @@ ShowPlayerDamage = {
 		SUB_GROUP = {
 			["save"] = "cb_show_damage_floating_numbers_subgroup",
 			["widget_type"] = "dropdown_checkbox",
-			["text"] = "Show Player Damage",
+			["text"] = "Floating Numbers",
 			["default"] = false,
 			["hide_options"] = {
 				{
@@ -22,7 +22,10 @@ ShowPlayerDamage = {
 					mode = "show",
 					options = {
 						"cb_show_damage_floating_numbers",
-						"cb_show_damage_hotkey_float_toggle"
+						"cb_show_damage_hotkey_float_toggle",
+						"cb_show_damage_floating_numbers_source",
+						"cb_show_hp_restore_procs_floating_numbers",
+						"cb_show_scavenger_procs_floating_numbers",
 					},
 				},
 				{
@@ -30,7 +33,10 @@ ShowPlayerDamage = {
 					mode = "hide",
 					options = {
 						"cb_show_damage_floating_numbers",
-						"cb_show_damage_hotkey_float_toggle"
+						"cb_show_damage_hotkey_float_toggle",
+						"cb_show_damage_floating_numbers_source",
+						"cb_show_hp_restore_procs_floating_numbers",
+						"cb_show_scavenger_procs_floating_numbers",
 					},
 				},
 			},
@@ -38,7 +44,7 @@ ShowPlayerDamage = {
 		FLTNRS = {
 			["save"] = "cb_show_damage_floating_numbers",
 			["widget_type"] = "stepper",
-			["text"] = "Floating Numbers",
+			["text"] = "Floating Damage Numbers",
 			["tooltip"] = "Show Floating Numbers\n" ..
 				"Toggle floating numbers on / off.\n\n" ..
 				"Floating numbers will appear over the heads of damaged skaven.",
@@ -48,31 +54,26 @@ ShowPlayerDamage = {
 				{text = "On", value = true}
 			},
 			["default"] = 1, -- Default first option is enabled. In this case Off
-			["hide_options"] = {
-				{
-					false,
-					mode = "hide",
-					options = {
-						"cb_show_damage_floating_numbers_source",
-						"cb_show_hp_restore_procs_floating_numbers",
-					}
-				},
-				{
-					true,
-					mode = "show",
-					options = {
-						"cb_show_damage_floating_numbers_source",
-						"cb_show_hp_restore_procs_floating_numbers",
-					}
-				},
-			},
 		},
 		FLTNRS_SHOW_HP_RESTORE_PROCS = {
 			["save"] = "cb_show_hp_restore_procs_floating_numbers",
 			["widget_type"] = "stepper",
-			["text"] = "Show on trait procs",
-			["tooltip"] = "Show hp traits proc numbers\n" ..
-				"Toggle floating numbers on / off when on bloodlust/regrowth procs.",
+			["text"] = "Floating Healing Numbers",
+			["tooltip"] = "Floating Healing Numbers\n" ..
+				"Toggle floating numbers on / off when bloodlust/regrowth procs.",
+			["value_type"] = "boolean",
+			["options"] = {
+				{text = "Off", value = false},
+				{text = "On", value = true}
+			},
+			["default"] = 1, -- Default first option is enabled. In this case Off
+		},
+		FLTNRS_SHOW_SCAVENGER_PROCS = {
+			["save"] = "cb_show_scavenger_procs_floating_numbers",
+			["widget_type"] = "stepper",
+			["text"] = "Floating Ammo Numbers",
+			["tooltip"] = "Floating Ammo Numbers\n" ..
+				"Toggle floating numbers on / off when scavenger procs.",
 			["value_type"] = "boolean",
 			["options"] = {
 				{text = "Off", value = false},
@@ -84,12 +85,11 @@ ShowPlayerDamage = {
 			["save"] = "cb_show_damage_floating_numbers_source",
 			["widget_type"] = "dropdown",
 			["text"] = "Source",
-			["tooltip"] = "Show Player Damage Source\n" ..
-				"Switch source for the player damage output.\n\n" ..
-				"-- OFF --\nNo messages will be posted.\n\n" ..
-				"-- ME ONLY --\nOnly show damage messages for yourself.\n\n" ..
-				"-- ALL --\nShows damage messages for all players, including bots.\n\n" ..
-				"-- CUSTOM --\nChoose the players you want to see damage messages of.\n\n",
+			["tooltip"] = "Show Floating Numbers Source\n" ..
+				"Switch source for the floating number output.\n\n" ..
+				"-- ME ONLY --\nOnly show floating numbers for yourself.\n\n" ..
+				"-- ALL --\nShows floating numbers for all players, including bots. Proc numbers can only show for yourself and your bots.\n\n" ..
+				"-- CUSTOM --\nChoose the players you want to see floating numbers of.\n\n",
 			["value_type"] = "number",
 			["options"] = {
 				{text = "Me Only", value = 1},
@@ -186,6 +186,7 @@ ShowPlayerDamage = {
 			color = nil,
 			timer = 0,
 			healed = nil,
+			ammo = nil,
 		},
 	},
 
@@ -275,6 +276,7 @@ ShowPlayerDamage.create_options = function()
 
 	Mods.option_menu:add_item("hud_group", me.SETTINGS.FLTNRS)
 	Mods.option_menu:add_item("hud_group", me.SETTINGS.FLTNRS_SHOW_HP_RESTORE_PROCS)
+	Mods.option_menu:add_item("hud_group", me.SETTINGS.FLTNRS_SHOW_SCAVENGER_PROCS)
 	Mods.option_menu:add_item("hud_group", me.SETTINGS.FLTNRS_SOURCE)
 	Mods.option_menu:add_item("hud_group", me.SETTINGS.FLTNRS_CHAR1)
 	Mods.option_menu:add_item("hud_group", me.SETTINGS.FLTNRS_CHAR2)
@@ -391,20 +393,22 @@ end
 	Post message
 --]]
 ShowPlayerDamage.floating.handle = function(self, unit, biggest_hit, parameters)
-	if get(me.SETTINGS.FLTNRS) and me.floating.has_unit(unit) then
+	local healed = parameters.healed
+	local ammo = parameters.ammo
+
+	if ((get(me.SETTINGS.FLTNRS) and (not healed) and (not ammo)) or (get(me.SETTINGS.FLTNRS_SHOW_HP_RESTORE_PROCS) and healed) or (get(me.SETTINGS.FLTNRS_SHOW_SCAVENGER_PROCS) and ammo)) and me.floating.has_unit(unit) then
 		local breed_data = Unit.get_data(unit, "breed") or { name = "player" } -- no breed means player
 		local attacker_unit = biggest_hit[DamageDataIndex.ATTACKER]
 		local damage_amount = biggest_hit[DamageDataIndex.DAMAGE_AMOUNT]
 		local hit_zone_name = biggest_hit[DamageDataIndex.HIT_ZONE]
 		local unit_is_dead = parameters.death
-		local healed = parameters.healed
 
 		if get(me.SETTINGS.FLTNRS_SOURCE) == 1 then
-			me.floating.local_player(attacker_unit, unit, damage_amount, unit_is_dead, breed_data.name, healed)
+			me.floating.local_player(attacker_unit, unit, damage_amount, unit_is_dead, breed_data.name, healed, ammo)
 		elseif get(me.SETTINGS.FLTNRS_SOURCE) == 2 then
-			me.floating.all(attacker_unit, unit, damage_amount, unit_is_dead, breed_data.name, healed)
+			me.floating.all(attacker_unit, unit, damage_amount, unit_is_dead, breed_data.name, healed, ammo)
 		elseif get(me.SETTINGS.FLTNRS_SOURCE) == 3 then
-			me.floating.custom(attacker_unit, unit, damage_amount, unit_is_dead, breed_data.name, healed)
+			me.floating.custom(attacker_unit, unit, damage_amount, unit_is_dead, breed_data.name, healed, ammo)
 		end
 
 		local health_extension = self and self.health_extension
@@ -466,7 +470,7 @@ ShowPlayerDamage.floating.render = function(unit)
 						elseif visibility_offset == 4 then
 							offset_vis[1] = 50 * scale
 						end
-						local scaled_font_size = unit_dmg.healed and font_size*1.3 or font_size
+						local scaled_font_size = (unit_dmg.healed or unit_dmg.ammo) and font_size*1.3 or font_size
 						if depth < 1 then
 							Mods.gui.text(damage, position2d[1]+2 + offset_vis[1], position2d[2]-2 + offset_vis[2] + offset_height, 1, scaled_font_size, black, font)
 							Mods.gui.text(damage, position2d[1]+2 + offset_vis[1], position2d[2]+2 + offset_vis[2] + offset_height, 1, scaled_font_size, black, font)
@@ -496,7 +500,7 @@ end
 --[[
 	Post message for local player
 --]]
-ShowPlayerDamage.floating.local_player = function(attacker_unit, unit, damage_amount, dead, breed, healed)
+ShowPlayerDamage.floating.local_player = function(attacker_unit, unit, damage_amount, dead, breed, healed, ammo)
 	local local_player = Managers.player:local_player()
 	if attacker_unit == local_player.player_unit and (not me.floating.corpses[unit]) then
 		local position = Unit.world_position(unit, 0)
@@ -504,26 +508,28 @@ ShowPlayerDamage.floating.local_player = function(attacker_unit, unit, damage_am
 		local color = {255, 255, 255, 255}
 		if dead then color = {255, 255, 56, 56} end
 		if healed then color = {255, 56, 255, 56} end
-		me.floating.units[unit][#me.floating.units[unit]+1] = me.floating.new(position, damage_amount, color, healed)
+		if ammo then color = {255, 255,255,0} end
+		me.floating.units[unit][#me.floating.units[unit]+1] = me.floating.new(position, damage_amount, color, healed, ammo)
 	end
 end
 --[[
 	Post message for every player
 --]]
-ShowPlayerDamage.floating.all = function(attacker_unit, unit, damage_amount, dead, breed, healed)
+ShowPlayerDamage.floating.all = function(attacker_unit, unit, damage_amount, dead, breed, healed, ammo)
 	if me.players.is_player_unit(attacker_unit) and (not me.floating.corpses[unit]) then
 		local position = Unit.world_position(unit, 0)
 		position[2] = position[2] + (me.enemies.offsets[breed] or me.enemies.offsets["default"])
 		local color = {255, 255, 255, 255}
 		if dead then color = {255, 255, 56, 56} end
 		if healed then color = {255, 56, 255, 56} end
-		me.floating.units[unit][#me.floating.units[unit]+1] = me.floating.new(position, damage_amount, color, healed)
+		if ammo then color = {255, 255,255,0} end
+		me.floating.units[unit][#me.floating.units[unit]+1] = me.floating.new(position, damage_amount, color, healed, ammo)
 	end
 end
 --[[
 	Post message for custom chosen player
 --]]
-ShowPlayerDamage.floating.custom = function(attacker_unit, unit, damage_amount, dead, breed, healed)
+ShowPlayerDamage.floating.custom = function(attacker_unit, unit, damage_amount, dead, breed, healed, ammo)
 	if me.players.is_player_unit(attacker_unit) then
 		local player_manager = Managers.player
 		local players = player_manager:human_and_bot_players()
@@ -537,7 +543,8 @@ ShowPlayerDamage.floating.custom = function(attacker_unit, unit, damage_amount, 
 					local color = {255, 255, 255, 255}
 					if dead then color = {255, 255, 56, 56} end
 					if healed then color = {255, 56, 255, 56} end
-					me.floating.units[unit][#me.floating.units[unit]+1] = me.floating.new(position, damage_amount, color, healed)
+					if ammo then color = {255, 255,255,0} end
+					me.floating.units[unit][#me.floating.units[unit]+1] = me.floating.new(position, damage_amount, color, healed, ammo)
 				end
 			end
 			i = i + 1
@@ -607,13 +614,14 @@ function(func, self, unit, effect_template, biggest_hit, parameters)
 	me.floating.handle(self, unit, biggest_hit, parameters)
 end)
 
-ShowPlayerDamage.floating.new = function(position, damage, color, healed)
+ShowPlayerDamage.floating.new = function(position, damage, color, healed, ammo)
 	local unit_dmg = table.clone(me.floating.definition)
 	unit_dmg.position = Vector3Aux.box(nil, position)
 	unit_dmg.damage = damage or 0
 	unit_dmg.color = color or {255, 255, 255, 255}
 	unit_dmg.timer = me.t
 	unit_dmg.healed = healed
+	unit_dmg.ammo = ammo
 	return unit_dmg
 end
 
@@ -644,15 +652,10 @@ end)
 
 
 local function DeathReactions_start_hook(func, unit, dt, context, t, killing_blow, is_server, cached_wall_nail_data)
-	if not get(me.SETTINGS.FLTNRS_SHOW_HP_RESTORE_PROCS) then
-		me.floating.corpses[unit] = true
-		return func(unit, dt, context, t, killing_blow, is_server, cached_wall_nail_data)
-	end
-
 	local original_BuffExtension_apply_buffs_to_value = BuffExtension.apply_buffs_to_value
 	BuffExtension.apply_buffs_to_value = function (self, value, stat_buff)
 		local amount, procced, parent_id = original_BuffExtension_apply_buffs_to_value(self, value, stat_buff)
-		if procced and stat_buff == StatBuffIndex.HEAL_ON_KILL then
+		if procced and stat_buff == StatBuffIndex.HEAL_ON_KILL and get(me.SETTINGS.FLTNRS_SHOW_HP_RESTORE_PROCS) then
 			local biggest_hit = {}
 			biggest_hit[DamageDataIndex.ATTACKER] = killing_blow[DamageDataIndex.ATTACKER]
 			biggest_hit[DamageDataIndex.DAMAGE_AMOUNT] = amount
@@ -662,8 +665,24 @@ local function DeathReactions_start_hook(func, unit, dt, context, t, killing_blo
 		return amount, procced, parent_id
 	end
 
+	local ammo_proc_amount = nil
+	local original_GenericAmmoUserExtension_add_ammo_to_reserve = GenericAmmoUserExtension.add_ammo_to_reserve
+	GenericAmmoUserExtension.add_ammo_to_reserve = function (self, amount)
+		ammo_proc_amount = amount
+		return original_GenericAmmoUserExtension_add_ammo_to_reserve(self, amount)
+	end
+
 	local return_val_1, return_val_2 = func(unit, dt, context, t, killing_blow, is_server, cached_wall_nail_data)
 
+	if ammo_proc_amount and get(me.SETTINGS.FLTNRS_SHOW_SCAVENGER_PROCS) then
+		local biggest_hit = {}
+		biggest_hit[DamageDataIndex.ATTACKER] = killing_blow[DamageDataIndex.ATTACKER]
+		biggest_hit[DamageDataIndex.DAMAGE_AMOUNT] = ammo_proc_amount
+		biggest_hit[DamageDataIndex.HIT_ZONE] = nil
+		me.floating.handle(nil, unit, biggest_hit, {ammo = true})
+	end
+
+	GenericAmmoUserExtension.add_ammo_to_reserve = original_GenericAmmoUserExtension_add_ammo_to_reserve
 	BuffExtension.apply_buffs_to_value = original_BuffExtension_apply_buffs_to_value
 
 	me.floating.corpses[unit] = true

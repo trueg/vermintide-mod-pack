@@ -68,6 +68,12 @@ if not mutationtoken then
 			end
 		end
 
+		-- Add Onslaught Grimoire
+		if onslaughttoken then
+			mission_system.request_mission(mission_system, "grimoire_hidden_mission", nil, Network.peer_id())
+			mission_system.update_mission(mission_system, "grimoire_hidden_mission", true, nil, Network.peer_id(), nil, true)
+		end
+
 		-- Add Mutation dice.
 		if mutationtoken then
 			for i = 1,5 do

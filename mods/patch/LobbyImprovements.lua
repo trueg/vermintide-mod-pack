@@ -47,7 +47,9 @@ LobbyImprovements.get_current_hero_index = function()
     local peer_id = Network.peer_id()
     local player = Managers.player:player_from_peer_id(peer_id)
  
-    return player.profile_index
+    local player_idx = (player and player.profile_index) or 0
+
+    return player_idx
 end
  
 LobbyImprovements.is_hero_available_in_lobby = function(hero_index, lobby_data)
@@ -215,6 +217,46 @@ LobbyImprovements.apply_lobby_red_filter = function(style)
     end
  
     return style
+end
+
+LobbyImprovements.update_steam_gameinfo = function(lobby_id)
+    local current_hero_index = LobbyImprovements.get_current_hero_index()
+
+    if current_hero_index < 1 then
+        return false
+    end
+
+    local lobby_data = LobbyInternal.get_lobby_data_from_id(lobby_id)
+
+    if not lobby_data then
+        return false
+    end
+
+    local lobby_host = lobby_data.host or lobby_data.Host
+
+    if not lobby_host then
+        return false
+    end
+
+    local lobby_name = LobbyImprovements.make_utf8_valid(lobby_data.server_name or lobby_data.unique_server_name or lobby_host)
+    local num_players = lobby_data.num_players or 0
+    local level_name = LobbyImprovements.lobby_level_display_name(lobby_data)
+    local difficulty = LobbyImprovements.lobby_difficulty_display_name(lobby_data)
+    local status = LobbyImprovements.lobby_status_text(lobby_data)
+    local current_hero = SPProfiles[current_hero_index]
+    local current_hero_name = Localize(current_hero.display_name)
+
+    local status_string = "Lobby: " .. lobby_name .. ", Players: " .. num_players .. "/4\n" ..
+                          "Level: " .. level_name .. ", Difficulty: " .. difficulty .. "\n" ..
+                          "Status: " .. status .. ", Playing as: " .. current_hero_name .. "\n"
+
+    if status_string ~= LobbyImprovements.current_status_string then
+        if Steamworks.SetGameInfo(lobby_id, status_string) then
+            LobbyImprovements.current_status_string = status_string
+        end
+    end
+
+    return true
 end
 LobbyImprovements.browser_scenegraph_definition = {
     root = {
@@ -1290,6 +1332,10 @@ LobbyImprovements.min_distance_for_teleport = 15
 LobbyImprovements.max_list_entries = 100
  
 LobbyImprovements.blacklist_file = "mods/patch/storage/blacklist.db"
+
+LobbyImprovements.gameinfo_update_interval = 25
+LobbyImprovements.gameinfo_next_update = 0
+LobbyImprovements.current_status_string = ""
  
 -- ####################################################################################################################
 -- ##### Options ######################################################################################################
@@ -1682,6 +1728,32 @@ Mods.hook.set(mod_name, "LobbyItemsList.update", function(func, self, dt, loadin
     end
  
     return
+end)
+
+Mods.hook.set(mod_name, "LobbyHost.update", function(func, self, dt)
+    local t = Application.time_since_launch()
+    local lobby_id = self:id()
+
+    if t >= LobbyImprovements.gameinfo_next_update and lobby_id then
+        if LobbyImprovements.update_steam_gameinfo(lobby_id) then
+            LobbyImprovements.gameinfo_next_update = t + LobbyImprovements.gameinfo_update_interval
+        end
+    end
+
+    return func(self, dt)
+end)
+
+Mods.hook.set(mod_name, "LobbyClient.update", function(func, self, dt)
+    local t = Application.time_since_launch()
+    local lobby_id = self:id()
+
+    if t >= LobbyImprovements.gameinfo_next_update and lobby_id then
+        if LobbyImprovements.update_steam_gameinfo(lobby_id) then
+            LobbyImprovements.gameinfo_next_update = t + LobbyImprovements.gameinfo_update_interval
+        end
+    end
+
+    return func(self, dt)
 end)
  
 -- ####################################################################################################################

@@ -68,7 +68,7 @@ MutatorMods.onslaught = {
 	checkbox_position = {580, 41},
 	tooltip_title = "Adventure Mode - Onslaught",
 	tooltip_text =	"\"The onslaught will not end, and your only way out is forward. Remember, they're numberless.\"\n" ..
-				"Onslaught features massively increased spawn rates for ambient rats, hordes, specials and boss events,\n" .. 
+				"Onslaught features massively increased spawn rates for ambient rats, hordes, specials and boss events,\n" ..
 				"as well as a crazy redesign of all map specific events. Playable on all difficulties.",
 	is_active = function()
 		return not not rawget(_G, "onslaughttoken")
@@ -115,7 +115,7 @@ end
 local map_gui_mod_panel = {
 	update = function(self, map_view)
 		if not self._window then
-			self:_create_window()
+			self:_create_window(map_view)
 			-- Adjust positions of a couple of tooltips in the map view so they wont
 			-- be placed underneath the mutator panel.
 			map_view.private_checkbox_widget.style.tooltip_text.cursor_offset = { 50, -55 }
@@ -149,16 +149,22 @@ local map_gui_mod_panel = {
 		end
 	end,
  
-	_create_window = function(self)
+	_create_window = function(self, map_view)
 		-- The following is a workaround for weird errors I get in the map view after
 		-- returning from a mission.
 		World.destroy_gui(Managers.world:world(Mods.gui.default_world), Mods.gui.gui)
 		Mods.gui.create_screen_ui()
  
+ 		-- Calculate the offset of the map UI from the bottom left of the screen.
+		local res_scale = RESOLUTION_LOOKUP.scale
+ 		local root_size = map_view.ui_scenegraph.root.size
+		local root_x = (RESOLUTION_LOOKUP.res_w - (root_size[1] * res_scale)) / 2
+		local root_y = (RESOLUTION_LOOKUP.res_h - (root_size[2] * res_scale)) / 2
+ 
 		-- Create a window for the mutators panel.
 		local scale = UIResolutionScale()
-		local window_pos = { (245 * scale), (46 * scale) }
-		local window_size = { (1087 * scale), (70 * scale) }
+		local window_pos = { math.round(root_x + (245 * scale)), math.round(root_y + (46 * scale)) }
+		local window_size = { math.round(1087 * scale), math.round(70 * scale) }
 		local window = Mods.ui.create_window("mutator_selection_window", window_pos, window_size)
 		window:set("transparent", true)
 		window:set("on_hover_enter", function() end)
@@ -175,6 +181,7 @@ local map_gui_mod_panel = {
 			checkbox.theme.color_text = Colors.get_color_table_with_alpha("cheeseburger", 255)
 			checkbox.theme.color_text_hover = Colors.get_color_table_with_alpha("white", 255)
 			checkbox.theme.color_text_disabled = Colors.get_color_table_with_alpha("gray", 255)
+			checkbox.theme.font = "scaled_hell_shark"
 		end
  
 		window:init()
@@ -194,6 +201,10 @@ Mods.hook.set(mod_name, "MapView.on_exit", function(func, self, ...)
 	map_gui_mod_panel:hide()
 end)
  
+local function scaled_font_size(font)
+	return font.size * UIResolutionScale()
+end
+ 
 -- _________________________________________________________________________ --
 -- Mod initialization.
 local function init_mod()
@@ -201,6 +212,9 @@ local function init_mod()
 	-- Add options for this module to the Options UI.
 	Mods.option_menu:add_group("mutator_gui", "Mutator Selection GUI")
 	Mods.option_menu:add_item("mutator_gui", MOD_SETTINGS.SHOW_MUTATOR_GUI, true)
+ 
+	Mods.ui.fonts:create("scaled_hell_shark", "hell_shark", 19)
+	Mods.ui.fonts:get("scaled_hell_shark").font_size = scaled_font_size
  
 	rawset(_G, "_mutator_gui_mod_previously_loaded", true)
 end

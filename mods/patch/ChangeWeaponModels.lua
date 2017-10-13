@@ -551,7 +551,8 @@ ChangeWeaponModels.ranged_weapons_ids = {
     },
     dr_drakefire_pistols = {
         plentiful = nil,
-        common    = "dr_drake_pistol_0001",
+        common    = nil,
+        _rare     = "dr_drake_pistol_0001",
         rare      = "dr_drake_pistol_0016",
         exotic    = "dr_drake_pistol_0042",
         unique    = "dr_drake_pistol_1001"
@@ -963,15 +964,14 @@ ChangeWeaponModels.profile_packages = function(profile_index, packages_list, is_
 end
  
 ChangeWeaponModels.rebuild_unit_list = function(package_list, add_units)
+    for unit_name,_ in pairs(add_units) do
+        package_list[unit_name] = true
+    end
+ 
     local new_list = {}
     local added = 0
  
     for unit_name,_ in pairs(package_list) do
-        added = added + 1
-        new_list[added] = NetworkLookup.inventory_packages[unit_name]
-    end
- 
-    for unit_name,_ in pairs(add_units) do
         added = added + 1
         new_list[added] = NetworkLookup.inventory_packages[unit_name]
     end
@@ -981,7 +981,6 @@ end
  
 ChangeWeaponModels.remove_items_units = function(package_list, remove_items)
     for _,item_data in ipairs(remove_items) do
-        local item_template = BackendUtils.get_item_template(item_data)
         local item_units = ChangeWeaponModels.get_item_original_units(item_data)
  
         local left_hand_unit_name = item_units.left_hand_unit
@@ -996,42 +995,6 @@ ChangeWeaponModels.remove_items_units = function(package_list, remove_items)
         if right_hand_unit_name then
             package_list[right_hand_unit_name] = nil
             package_list[right_hand_unit_name .. "_3p"] = nil
-        end
- 
-        local actions = item_template.actions
- 
-        for action_name,sub_actions in pairs(actions) do
-            for sub_action_name,sub_action_data in pairs(sub_actions) do
-                local projectile_info = sub_action_data.projectile_info
- 
-                if projectile_info then
-                    if projectile_info.projectile_unit_name then
-                        package_list[projectile_info.projectile_unit_name] = nil
-                    end
- 
-                    if projectile_info.dummy_linker_unit_name then
-                        package_list[projectile_info.dummy_linker_unit_name] = nil
-                    end
- 
-                    if projectile_info.dummy_linker_broken_units then
-                        for unit_name,unit in pairs(projectile_info.dummy_linker_broken_units) do
-                            package_list[unit] = nil
-                        end
-                    end
-                end
-            end
-        end
- 
-        local ammo_data = item_template.ammo_data
- 
-        if ammo_data then
-            if ammo_data.ammo_unit then
-                package_list[ammo_data.ammo_unit] = nil
-            end
- 
-            if ammo_data.ammo_unit_3p then
-                package_list[ammo_data.ammo_unit_3p] = nil
-            end
         end
     end
  
@@ -1061,9 +1024,14 @@ ChangeWeaponModels.get_items_units = function(items)
             end
  
             if target_weapon then
-                local target_weapon_table = ItemMasterList[target_weapon]
+                local target_weapon_table = nil
  
-                local item_template = BackendUtils.get_item_template(target_weapon_table)
+                if target_rarity == item_data.rarity then
+                    target_weapon_table = item_data
+                else
+                    target_weapon_table = ItemMasterList[target_weapon]
+                end
+ 
                 local item_units = ChangeWeaponModels.get_item_original_units(target_weapon_table)
  
                 local left_hand_unit_name = item_units.left_hand_unit
@@ -1089,47 +1057,6 @@ ChangeWeaponModels.get_items_units = function(items)
                     if item.has_third_person then
                         units_count = units_count + 1
                         units[right_hand_unit_name .. "_3p"] = true
-                    end
-                end
- 
-                local actions = item_template.actions
- 
-                for action_name,sub_actions in pairs(actions) do
-                    for sub_action_name,sub_action_data in pairs(sub_actions) do
-                        local projectile_info = sub_action_data.projectile_info
- 
-                        if projectile_info then
-                            if projectile_info.projectile_unit_name then
-                                units_count = units_count + 1
-                                units[projectile_info.projectile_unit_name] = true
-                            end
- 
-                            if projectile_info.dummy_linker_unit_name then
-                                units_count = units_count + 1
-                                units[projectile_info.dummy_linker_unit_name] = true
-                            end
- 
-                            if projectile_info.dummy_linker_broken_units then
-                                for unit_name,unit in pairs(projectile_info.dummy_linker_broken_units) do
-                                    units_count = units_count + 1
-                                    units[unit] = true
-                                end
-                            end
-                        end
-                    end
-                end
- 
-                local ammo_data = item_template.ammo_data
- 
-                if ammo_data then
-                    if ammo_data.ammo_unit then
-                        units_count = units_count + 1
-                        units[ammo_data.ammo_unit] = true
-                    end
- 
-                    if ammo_data.ammo_unit_3p then
-                        units_count = units_count + 1
-                        units[ammo_data.ammo_unit_3p] = true
                     end
                 end
             end
@@ -1159,7 +1086,7 @@ ChangeWeaponModels.find_items_from_unit_names = function(unit_names)
         if item_names then
             for item_name,_ in pairs(item_names) do
                 local item_data = ItemMasterList[item_name]
-                local existing_item = items[item_data.item_type .. "_" .. item_data.rarity]
+                local existing_item = items[item_name]
  
                 if existing_item then
                     if existing_item.has_first_person then
@@ -1170,7 +1097,7 @@ ChangeWeaponModels.find_items_from_unit_names = function(unit_names)
                     end
                 end
  
-                items[item_data.item_type .. "_" .. item_data.rarity] = {
+                items[item_name] = {
                     item_data = item_data,
                     has_first_person = has_first_person,
                     has_third_person = has_third_person

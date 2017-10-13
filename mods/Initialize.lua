@@ -42,10 +42,11 @@ Mods.init = function()
 	Mods.exec("patch", "ThirdPersonEquipment_Definitions")
 	Mods.exec("patch", "ThirdPersonEquipment")
 	Mods.exec("patch", "LobbyImprovements")
+	Mods.exec("patch", "SalvageOnLoottable")
 	Mods.exec("patch", "SkinDisabler")
 	Mods.exec("patch", "MutatorSelector")
 	Mods.exec("patch", "ChangeWeaponModelsWarning")
-	
+
 	-- Unstable mod loaded only if the warning setting is enabled.
 	if Application.user_setting("cb_weapon_model_warning") then
 		Mods.exec("patch", "ChangeWeaponModels")

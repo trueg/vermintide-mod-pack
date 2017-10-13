@@ -15,7 +15,6 @@ local set_user_setting = Application.set_user_setting
 local DAMAGE_DATA_STRIDE = DamageDataIndex.STRIDE
 local FF_STATE_STARTING = 1
 local FF_STATE_ONGOING = 2
-local FF_FAKE_DAMAGE_TYPE = "knockdown_bleed"
 
 --[[
 	Setting defs.

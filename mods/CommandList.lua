@@ -15,5 +15,5 @@ Mods.commands = {
 	{"/remind",	 true,	 	"commands", 	"remind"},
 	{"/onslaught",	 false,	 	"commands", 	"onslaught"},
 	{"/freezeall",   false,         "commands",     "freezeall"},
-
+	
 }

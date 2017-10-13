@@ -32,6 +32,7 @@ mod.widget_settings = {
 				false,
 				mode = "hide",
 				options = {
+                    "cb_visible_3p_equipment_performance_mode",
 					"cb_visible_3p_equipment_dwarf_weapons",
 					"cb_visible_3p_equipment_1h_weapons",
 					"cb_visible_3p_equipment_waywatcher_dual_weapons",
@@ -43,6 +44,7 @@ mod.widget_settings = {
 				true,
 				mode = "show",
 				options = {
+                    "cb_visible_3p_equipment_performance_mode",
 					"cb_visible_3p_equipment_dwarf_weapons",
 					"cb_visible_3p_equipment_1h_weapons",
 					"cb_visible_3p_equipment_waywatcher_dual_weapons",
@@ -51,6 +53,15 @@ mod.widget_settings = {
 				},
 			},
 		},
+	},
+	PERFORMANCE_MODE = {
+		["save"] = "cb_visible_3p_equipment_performance_mode",
+		["widget_type"] = "checkbox",
+		["text"] = "Performance Mode",
+		["tooltip"] =  "Hide Consumables\n" ..
+                       "Only render melee and ranged weapons for third person equipment.\n" ..
+                       "Books and consumables will not be rendered.",
+		["default"] = false,
 	},
 	DWARF_WEAPONS_POSITION = {
 		["save"] = "cb_visible_3p_equipment_dwarf_weapons",
@@ -146,6 +157,7 @@ mod.options = {}
 mod.create_options = function(self)
 	Mods.option_menu:add_group("visible_3p_equipment", "Third Person Equipment")
 	Mods.option_menu:add_item("visible_3p_equipment", self.widget_settings.ACTIVE, true)
+	Mods.option_menu:add_item("visible_3p_equipment", self.widget_settings.PERFORMANCE_MODE)
 	Mods.option_menu:add_item("visible_3p_equipment", self.widget_settings.ONE_HANDED_WEAPONS_POSITION)
 	Mods.option_menu:add_item("visible_3p_equipment", self.widget_settings.DWARF_WEAPONS_POSITION)
 	Mods.option_menu:add_item("visible_3p_equipment", self.widget_settings.DWARF_ONE_HANDED_WEAPONS_POSITION)
@@ -404,7 +416,10 @@ mod.add_all_items = function(self, unit)
 			local inventory_extension = ScriptUnit.extension(unit, "inventory_system")
 			local equipment = inventory_extension.equipment(inventory_extension)
 			for name, slot in pairs(equipment.slots) do
-				mod:add_item(unit, name, slot.item_data)
+                if (not self.get(self.widget_settings.PERFORMANCE_MODE.save) or 
+                    (name == "slot_melee" or name == "slot_ranged")) then
+                    mod:add_item(unit, name, slot.item_data)
+                end
 			end
 			self.current.slot[unit] = self.current.slot[unit] or equipment.wielded_slot or "slot_melee"
 			self:set_equipment_visibility(unit)

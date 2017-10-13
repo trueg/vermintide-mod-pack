@@ -18,7 +18,7 @@ Mods.exec = function(group, file_name, args)
 			local f = io.open(file_path, "r")
 			local data = f:read("*all")
 			local func = loadstring(data)
-			
+
 			if args == nil then
 				func()
 			else
@@ -27,7 +27,11 @@ Mods.exec = function(group, file_name, args)
 		
 			f:close()
 		end)
-		
+
+		if err == "mod:23: attempt to call local 'func' (a nil value)" then
+			err = "Attempt to call local 'func' (a nil value) - Syntax error"
+		end
+
 		if err ~= nil then
 			EchoConsole("Error on file '" .. file_path .. "'")
 			EchoConsole(err)

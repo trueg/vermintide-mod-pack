@@ -642,9 +642,32 @@ if not onslaughttoken then
 				}
 			}
 
-	if TerrorEventBlueprints.magnus_end_event[4] ~= ogre_event then
-		table.insert(TerrorEventBlueprints.magnus_end_event, 4, ogre_event)
-	end
+	HordeSettings.default.compositions.magnus_end_patrol = {
+				{
+					name = "somevermin",
+					weight = 3,
+					breeds = {
+						"skaven_storm_vermin_commander",
+						12
+					}
+				}
+			}
+
+	table.insert(TerrorEventBlueprints.magnus_end_event, 4, 
+		{
+			"event_horde",
+			spawner_id = "magnus_tower_horn",
+			composition_type = "magnus_end_patrol"
+		}
+	)
+
+	table.insert(TerrorEventBlueprints.magnus_end_event, 12, 
+		{
+			"event_horde",
+			spawner_id = "magnus_tower_horn",
+			composition_type = "magnus_end_patrol"
+		}
+	)
 
 	--------------
 	--Shared composition
@@ -2151,6 +2174,7 @@ if not onslaughttoken then
 		},
 		{
 			"spawn",
+			1,
 			breed_name = "skaven_rat_ogre"
 		}
 	}
@@ -2165,6 +2189,7 @@ if not onslaughttoken then
 		},
 		{
 			"spawn",
+			1,
 			breed_name = "skaven_rat_ogre"
 		}
 	}
@@ -3683,7 +3708,7 @@ if not onslaughttoken then
 			"continue_when",
 			duration = 80,
 			condition = function (t)
-				return count_event_breed("skaven_clan_rat") < 10 and count_event_breed("skaven_slave") < 10
+				return count_event_breed("skaven_clan_rat") < 8 and count_event_breed("skaven_slave") < 8 and count_event_breed("skaven_storm_vermin_commander") < 10
 			end
 		},
 		{
@@ -3713,7 +3738,7 @@ if not onslaughttoken then
 			"continue_when",
 			duration = 80,
 			condition = function (t)
-				return count_event_breed("skaven_clan_rat") < 10 and count_event_breed("skaven_storm_vermin_commander") < 6
+				return count_event_breed("skaven_clan_rat") < 10 and count_event_breed("skaven_storm_vermin_commander") < 5
 			end
 		},
 		{
