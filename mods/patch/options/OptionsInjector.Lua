@@ -1,9 +1,9 @@
-﻿--[[
+﻿local mod_name = "OptionsInjector"
+--[[
 	Author: grasmann
 	
 	Injects custom options into menus
 --]]
-local mod_name = "OptionsInjector"
 
 OptionsInjector = {
 	
@@ -548,6 +548,22 @@ OptionsInjector.widgets.stepper = function(text, options, selected_option, toolt
 	definition.content.right_hotspot.disable_button = false
 	definition.content.left_hotspot.parent = definition.content
 	definition.content.left_hotspot.disable_button = false
+
+	for _,id in ipairs({"left_arrow", "right_arrow", "left_arrow_hover", "right_arrow_hover"}) do
+		for pass_index, pass in ipairs(definition.element.passes) do
+			if pass.texture_id and pass.texture_id == id then
+				definition.element.passes[pass_index].content_check_function = function(content)
+					local game_mode = Managers.state.game_mode
+					if content.disabled_outside_inn and game_mode and game_mode:game_mode_key() ~= "inn" then
+						content.disabled = true
+						return false
+					end
+					content.disabled = false
+					return true
+				end
+			end
+		end
+	end
 	
 	-- ##### Style #####
 	definition.style.text.localize = false
@@ -1175,7 +1191,9 @@ OptionsInjector.CreateWidget = function(setting)
 			end
 			
 			-- Create widget
-			return me.CreateStepperWidget(setting.save, setting.text, setting.options, setting.default, setting.tooltip, setting.hide_options)
+			local new_stepper_widget = me.CreateStepperWidget(setting.save, setting.text, setting.options, setting.default, setting.tooltip, setting.hide_options)
+			if setting.disabled_outside_inn ~= nil then new_stepper_widget.content.disabled_outside_inn = setting.disabled_outside_inn end
+			return new_stepper_widget
 		elseif setting.widget_type == "slider" then -- Slider
 			-- Check save data
 			if type(value) ~= "number" or value < setting.range[1] or value > setting.range[2] then

@@ -1,9 +1,9 @@
 ThirdPersonEquipment = {}
-mod = ThirdPersonEquipment
+local mod = ThirdPersonEquipment
 
-mod_name = "ThirdPersonEquipment"
+local mod_name = "ThirdPersonEquipment"
 
-oi = OptionsInjector
+local oi = OptionsInjector
 
 mod.get = Application.user_setting
 mod.set = Application.set_user_setting

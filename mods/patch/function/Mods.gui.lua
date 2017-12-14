@@ -1,10 +1,10 @@
+local mod_name = "Mods.gui"
 --[[
 	author: grasmann
 	
 	Mods.gui
 		- Provides a screen gui and functionality to draw to it
 --]]
-local mod_name = "Mods.gui"
 
 Mods.gui = {
 	gui = nil,

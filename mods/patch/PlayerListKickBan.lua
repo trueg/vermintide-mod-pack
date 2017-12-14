@@ -8,11 +8,11 @@ local check_time = 0
 Mods.hook.set(mod_name, "MatchmakingManager.update", function(func, self, dt, t)
 	-- Call orginal function
 	func(self, dt, t)
-	
+
 	if Managers.player.is_server then -- can only ban when server
 		if t - check_time > 1 then -- check once ever second to ban
 			Mods.ban.check_players()
-		
+
 			check_time = t
 		end
 	end
@@ -78,18 +78,18 @@ Mods.hook.set(mod_name, "MatchmakingManager.rpc_matchmaking_request_join_lobby",
 
 	return
 end)
- 
-function is_kicked(peer_id)
+
+local function is_kicked(peer_id)
 	if Mods.ban.kicked.peer_id and Mods.ban.kicked.peer_id == tostring(peer_id) and Mods.ban.kicked.kicking_time and Managers.state.network:network_time() - Mods.ban.kicked.kicking_time > 3 then
 		Mods.ban.kicked.kicking_time = nil
 		return true
 	end
 	return false
 end
- 
+
 local new_connections = {}
- 
--- added "or is_kicked(peer_id)" and commented out the ch_printf
+
+-- added "or is_kicked(peer_id)" and commented out the ch_printf and kicking_time reset
 Mods.hook.set(mod_name, "ConnectionHandler.update", function(func, self, dt)
 
 	table.clear(new_connections)
@@ -116,15 +116,14 @@ Mods.hook.set(mod_name, "ConnectionHandler.update", function(func, self, dt)
 				Network.destroy_connection(peer_id)
 			end
 
-			if Mods.ban.kicked.peer_id and Mods.ban.kicked.peer_id == tostring(peer_id) then
+			if Mods.ban.kicked.peer_id and Mods.ban.kicked.peer_id == tostring(peer_id) then -- added
 				Mods.ban.kicked.kicking_time = nil
 			end
 
+			pending_disconnects[peer_id] = nil
+			current_connections[peer_id] = nil
 
-		pending_disconnects[peer_id] = nil
-		current_connections[peer_id] = nil
-
-		self.update_peer(self, peer_id, PeerConnectionState.Disconnected)
+			self.update_peer(self, peer_id, PeerConnectionState.Disconnected)
 		end
 	end
 
@@ -145,20 +144,9 @@ Mods.hook.set(mod_name, "ConnectionHandler.update", function(func, self, dt)
 		end
 	end
 
-	if Application.platform() == "xb1" then
-		for i, peer_id in ipairs(running_connections) do
-			if not current_connections[peer_id] and not pending_connects[peer_id] and not pending_disconnects[peer_id] and not Network.is_used(peer_id) then
-				-- ch_printf("Destroying connection to peer %q since not used.", peer_id)
-				Network.destroy_connection(peer_id)
-			end
-		end
-	end
-
 	local peer_states = self.peer_states
 	local broken_connections = self.broken_connections
 	local num_broken_connections = self.num_broken_connections
-
-
 
 	for peer_id, peer_connected_value in pairs(current_connections) do
 		if Network.is_broken(peer_id) or is_kicked(peer_id) then -- added "or is_kicked(peer_id)"
@@ -166,7 +154,7 @@ Mods.hook.set(mod_name, "ConnectionHandler.update", function(func, self, dt)
 				-- ch_printf("Peer %q is now broken.", peer_id)
 				self.update_peer(self, peer_id, PeerConnectionState.Broken)
 			end
- 
+
 			num_broken_connections = num_broken_connections + 1
 			broken_connections[num_broken_connections] = peer_id
 			current_connections[peer_id] = nil
@@ -193,9 +181,9 @@ Mods.hook.set(mod_name, "IngamePlayerListUI.update", function(func, self, dt)
 	-- Call orginal function
 	func(self, dt)
 
-	-- Kick    
+	-- Kick
 	if self.active then
-		local players = self.players       
+		local players = self.players
 		if Managers.player.is_server then -- can only kick when server
 			for i, player in ipairs(players) do
 				if player.peer_id ~= Network.peer_id() then -- can't kick yourself

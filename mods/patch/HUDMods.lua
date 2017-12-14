@@ -1,3 +1,4 @@
+local mod_name = "HudMods"
 --[[
 	authors: grimalackt, iamlupo, walterr
 
@@ -7,7 +8,6 @@
 	*	Make the black markers on the Overcharge Bar dynamic: they will move to show the postion at
 		which the next chunk of damage will apply.
 --]]
-local mod_name = "HudMods"
 
 local is_player_unit = DamageUtils.is_player_unit
 local user_setting = Application.user_setting
@@ -34,10 +34,10 @@ local MOD_SETTINGS = {
 					"cb_hudmod_dynamic_ocharge_pips",
 					"cb_hud_party_trinkets_indicators",
 					"cb_potion_pickup_enabled",
-					"cb_damage_taken_enabled",
 					"cb_damage_hp_procs_fx",
 					"cb_hudmod_dodge_tired",
-					"cb_hud_force_gamepad_hud"
+					"cb_hud_reload_reminder",
+					"cb_hud_faster_rerolls",
 				},
 			},
 			{
@@ -48,10 +48,10 @@ local MOD_SETTINGS = {
 					"cb_hudmod_dynamic_ocharge_pips",
 					"cb_hud_party_trinkets_indicators",
 					"cb_potion_pickup_enabled",
-					"cb_damage_taken_enabled",
 					"cb_damage_hp_procs_fx",
 					"cb_hudmod_dodge_tired",
-					"cb_hud_force_gamepad_hud"
+					"cb_hud_reload_reminder",
+					"cb_hud_faster_rerolls",
 				},
 			},
 		},
@@ -119,8 +119,8 @@ local MOD_SETTINGS = {
 	HOMOGENIZE_PARTY_TRINKET_ICONS = {
 		["save"] = "cb_hud_party_trinkets_homogenize_icons",
 		["widget_type"] = "stepper",
-		["text"] = "Homogenize Event Icons",
-		["tooltip"] = "Homogenize Event Icons\n" ..
+		["text"] = "Homogenize event icons",
+		["tooltip"] = "Homogenize event icons\n" ..
 			"Make event trinkets have icon of its closest equivalent.",
 		["value_type"] = "boolean",
 		["options"] = {
@@ -142,24 +142,11 @@ local MOD_SETTINGS = {
 		},
 		["default"] = 1, -- Default second option is enabled. In this case Off
 	},
-	DAMAGE_TAKEN = {
-		["save"] = "cb_damage_taken_enabled",
-		["widget_type"] = "stepper",
-		["text"] = "Damage Taken Scoreboard Fix",
-		["tooltip"] = "Damage Taken Scoreboard Fix\n" ..
-			"Ignore damage taken while already downed for the purpose of the end match scoreboard.",
-		["value_type"] = "boolean",
-		["options"] = {
-			{text = "Off", value = false},
-			{text = "On", value = true},
-		},
-		["default"] = 1, -- Default second option is enabled. In this case Off
-	},
 	HP_PROCS_FX = {
 		["save"] = "cb_damage_hp_procs_fx",
 		["widget_type"] = "stepper",
-		["text"] = "Hide Bloodlust/Regrowth Proc Effects",
-		["tooltip"] = "Hide Bloodlust/Regrowth Proc Effects\n" ..
+		["text"] = "Hide bloodlust/regrowth proc effects",
+		["tooltip"] = "Hide bloodlust/regrowth proc effects\n" ..
 			"Hide graphic effects on bloodlust/regrowth procs.",
 		["value_type"] = "boolean",
 		["options"] = {
@@ -181,14 +168,26 @@ local MOD_SETTINGS = {
 		},
 		["default"] = 1, -- Default second option is enabled. In this case Off
 	},
-	FORCE_GAMEPAD_HUD = {
-		["save"] = "cb_hud_force_gamepad_hud",
+	RELOAD_REMINDER = {
+		["save"] = "cb_hud_reload_reminder",
 		["widget_type"] = "stepper",
-		["text"] = "Always Use Gamepad HUD",
-		["tooltip"] = "Always Use Gamepad HUD\n" ..
-			"A different HUD is used when you play the game with a gamepad, one which has a larger health " ..
-			"bar but is more compact overall. Enabling this option will cause the gamepad HUD to be used " ..
-			"even when you are not using a gamepad.",
+		["text"] = "Reload Reminder",
+		["tooltip"] = "Reload Reminder\n" ..
+			"Changes the background color of the weapon display on the HUD when your ranged weapon " ..
+			"is not fully loaded.",
+		["value_type"] = "boolean",
+		["options"] = {
+			{text = "Off", value = false},
+			{text = "On", value = true},
+		},
+		["default"] = 1, -- By default first option is selected, in this case "Off"
+	},
+	FASTER_REROLLS = {
+		["save"] = "cb_hud_faster_rerolls",
+		["widget_type"] = "stepper",
+		["text"] = "Sped Up Trait Rerolling",
+		["tooltip"] = "Sped Up Trait Rerolling\n" ..
+			"Speed up the weapon traits rerolling animations.",
 		["value_type"] = "boolean",
 		["options"] = {
 			{text = "Off", value = false},
@@ -234,7 +233,7 @@ local function trigger_player_taking_damage_buffs(player_unit, attacker_unit, is
 
 	return
 end
- 
+
 local function trigger_player_friendly_fire_dialogue(player_unit, attacker_unit)
 	local player_manager = Managers.player
 
@@ -248,7 +247,7 @@ local function trigger_player_friendly_fire_dialogue(player_unit, attacker_unit)
 
 		dialogue_input.trigger_dialogue_event(dialogue_input, "friendly_fire", event_data)
 	end
- 
+
 	return
 end
 
@@ -333,11 +332,11 @@ end)
 local trinkets_widget =
 {
 	scenegraph_id = "pivot",
-	offset = { 55, -88, -2 },
+	offset = { 55, -82, -2 },
 	element = {
 		passes = (function()
 						local passes = {}
-						for i=1,9 do
+						for i=1,10 do
 							table.insert(passes, {
 									pass_type = "texture_uv",
 									style_id = "trinket_"..i,
@@ -346,6 +345,16 @@ local trinkets_widget =
 										return ui_content and ui_content.show or false
 									end,
 								})
+						end
+						for _,trinket_pos in ipairs({100,101}) do
+							table.insert(passes, {
+								pass_type = "texture_uv",
+								style_id = "trinket_"..trinket_pos,
+								content_id = "trinket_"..trinket_pos,
+								content_check_function = function(ui_content)
+									return ui_content and ui_content.show or false
+								end,
+							})
 						end
 						return passes
 					end)()
@@ -361,7 +370,8 @@ local trinkets_widget =
 						"icon_trophy_fish_t3_01",
 						"icon_trophy_wine_bottle_01_01",
 						"icon_trophy_honing_kit_with_carroburg_seal_01_03",
-						"icon_trophy_ornamented_scroll_case_01_03"
+						"icon_trophy_ornamented_scroll_case_01_03",
+						"icon_trophy_solland_sigil_01_01",
 					}
 					for i, icon in ipairs(trinket_icons) do
 						content["trinket_"..i] = {
@@ -370,42 +380,66 @@ local trinkets_widget =
 							uvs = i < 6 and { { 0.17, 0.17 }, { 0.83, 0.83 } } or { { 0.17, 0.5 }, { 0.83, 0.83 } },
 						}
 					end
+					-- dove special case, we show the trinket with 2 widgets, for each half
+					content["trinket_"..100] = {
+						show = false,
+						texture_id = "icon_trophy_silver_dove_of_shallya_01_03",
+						uvs = { { 0.17, 0.17 }, { 0.5, 0.83 } },
+					}
+					content["trinket_"..101] = {
+						show = false,
+						texture_id = "icon_trophy_silver_dove_of_shallya_01_03",
+						uvs = { { 0.5, 0.17 }, { 0.83, 0.83 } },
+					}
 					return content
 				end)(),
 	style = (function()
 					local style = {}
-					for i, offset in ipairs({0, 37, 37*2, 37*3+10, 37*4+20}) do
+					local offset_x = 37
+					for i, offset in ipairs({0, offset_x, offset_x*2, offset_x*3, offset_x*4}) do
 						style["trinket_"..i] = {
 							color = { 255, 255, 255, 255 },
 							offset = { offset, 0, 1 },
-							size = { 32, 32 },
+							size = { 30, 30 },
 						}
-					end
-					for i, offset in ipairs({0, 37, 37*2, 37*3+10, 37*4+20}) do
 						style["trinket_"..(i+5)] = {
 							color = { 255, 255, 255, 255 },
-							offset = { offset, 0, 2 },
-							size = { 32, 16 },
+							offset = { offset, 0, 3 },
+							size = { 30, 15 },
 						}
 					end
+					-- dove special case, we show the trinket with 2 widgets, for each half, and each of those two with different z depth
+					style["trinket_"..100] = {
+						color = { 255, 255, 255, 255 },
+						offset = { 0, 0, 2 },
+						size = { 15, 30 },
+					}
+					style["trinket_"..101] = {
+						color = { 255, 255, 255, 255 },
+						offset = { 15, 0, 0 },
+						size = { 15, 30 },
+					}
 					return style
 				end)(),
 }
 
 local luck_position = 4
 local dupe_position = luck_position + 5
+local lichbone_position = 5
+local sisterhood_position = lichbone_position + 5
 local tracked_trinkets = {
 	pot_share = { match = "potion_spread", position = 2 },
 	pot_share_skulls = { match = "pot_share", position = 2 },
-	dove = { match = "heal_self_on_heal_other", position = 1, priority = 2 },
-	hp_share = { match = "medpack_spread", position = 1, priority = 1 },
+	dove = { match = "heal_self_on_heal_other", position = 100 },
+	hp_share = { match = "medpack_spread", position = 1},
 	grenade_radius = { match = "grenade_radius", position = 3 },
 	luck = { match = "increase_luck", position = luck_position },
-	grim = { match = "reduce_grimoire_penalty", position = 5 },
+	grim = { match = "reduce_grimoire_penalty", position = lichbone_position },
 	med_dupe = { match = "not_consume_medpack", position = 6 },
 	pot_dupe = { match = "not_consume_potion", position = 7 },
 	bomb_dupe = { match = "not_consume_grenade", position = 8 },
 	dupe = { match = "not_consume_pickup", position = dupe_position },
+	sisterhood = { match = "shared_damage", position = sisterhood_position },
 }
 local trinket_icon_replacements = {
 	["icon_trophy_skull_encased_t3_03"] = "icon_trophy_potion_rack_t3_01",
@@ -448,13 +482,11 @@ local function get_active_trinket_slots(attachment_extn)
 		for _, trinket in pairs(tracked_trinkets) do
 			if item_key and string.find(item_key, trinket.match) ~= nil then
 				local pos = trinket.position
-				if not (active_trinkets[pos] and active_trinkets[pos].info.priority < trinket.priority) then
-					active_trinkets[pos] = {info = trinket, icon = ItemMasterList[item_key].inventory_icon}
-					if user_setting(MOD_SETTINGS.HOMOGENIZE_PARTY_TRINKET_ICONS.save) then
-						for icon_name, replacement_icon_name in pairs(trinket_icon_replacements) do
-							if active_trinkets[pos].icon == icon_name then
-								active_trinkets[pos].icon = replacement_icon_name
-							end
+				active_trinkets[pos] = {info = trinket, icon = ItemMasterList[item_key].inventory_icon}
+				if user_setting(MOD_SETTINGS.HOMOGENIZE_PARTY_TRINKET_ICONS.save) then
+					for icon_name, replacement_icon_name in pairs(trinket_icon_replacements) do
+						if active_trinkets[pos].icon == icon_name then
+							active_trinkets[pos].icon = replacement_icon_name
 						end
 					end
 				end
@@ -464,18 +496,24 @@ local function get_active_trinket_slots(attachment_extn)
 	return active_trinkets
 end
 
-Mods.hook.set(mod_name, "UnitFramesHandler._create_unit_frame_by_type", function(orig_func, self, ...)
-	if user_setting(MOD_SETTINGS.FORCE_GAMEPAD_HUD.save) then
-		-- The gamepad HUD will be used if the platform is not "win32"
-		local real_platform = self.platform
-		self.platform = "definitely-not-win32"
-		local result = orig_func(self, ...)
-		self.platform = real_platform
-		return result
-	else
-		return orig_func(self, ...)
+local function requires_reload(player)
+	local player_unit = player and player.player_unit
+	if player_unit then
+		local inventory_extension = ScriptUnit.extension(player_unit, "inventory_system")
+		local slot_data = inventory_extension:equipment().slots["slot_ranged"]
+		if slot_data then
+			local right_unit = slot_data.right_unit_1p
+			local left_unit = slot_data.left_unit_1p
+			local ammo_extn = (right_unit and ScriptUnit.has_extension(right_unit, "ammo_system")) or
+				(left_unit and ScriptUnit.has_extension(left_unit, "ammo_system"))
+			if ammo_extn and (not ammo_extn:ammo_available_immediately()) and (ammo_extn.reload_time > 0.5) and
+					(ammo_extn:ammo_count() < ammo_extn:clip_size()) then
+				return true
+			end
+		end
 	end
-end)
+	return false
+end
 
 Mods.hook.set(mod_name, "UnitFramesHandler.update", function(orig_func, self, dt, t, my_player)
 	local player_unit = self.my_player.player_unit
@@ -550,15 +588,28 @@ Mods.hook.set(mod_name, "UnitFramesHandler.update", function(orig_func, self, dt
 		end
 	end
 
-	-- Check whether the FORCE_GAMEPAD_HUD setting has changed.
-	local force_gamepad_hud = user_setting(MOD_SETTINGS.FORCE_GAMEPAD_HUD.save)
-	if not force_gamepad_hud ~= not self._unit_frames[1].gamepad_version then
-		if force_gamepad_hud then
-			self:on_gamepad_activated()
-		else
-			self:on_gamepad_deactivated()
+	-- Update the reload reminder (for gamepad HUD).
+	local my_unit_frame = self._unit_frames[1]
+	local show_reload_reminder_enabled = user_setting(MOD_SETTINGS.RELOAD_REMINDER.save)
+	if my_unit_frame.gamepad_version and (show_reload_reminder_enabled or self.show_reload_reminder) then
+		local show_reload_reminder = requires_reload(my_unit_frame.player_data.player) and show_reload_reminder_enabled
+		self.show_reload_reminder = show_reload_reminder
+		local bg_texture = (show_reload_reminder and "stance_bar_blue") or "console_weapon_slot"
+		local bg_widget = my_unit_frame.widget:_widget_by_name("loadout_static")
+		if bg_widget.content.weapon_bg.texture_id ~= bg_texture then
+			bg_widget.content.weapon_bg.texture_id = bg_texture
+			bg_widget.element.dirty = true
+			local bg_color = bg_widget.style.weapon_bg.color
+			if show_reload_reminder then
+				bg_color[1] = 255
+				bg_color[3] = 0
+				bg_color[4] = 0
+			else
+				bg_color[1] = 180
+				bg_color[3] = 255
+				bg_color[4] = 255
+			end
 		end
-		self.ingame_ui.ingame_hud.player_inventory_ui:set_visible(self._is_visible)
 	end
 
 	return orig_func(self, dt, t, my_player)
@@ -580,7 +631,7 @@ Mods.hook.set(mod_name, "HitReactions.templates.player.unit", function(func, uni
 			if ((damage_type ~= "burn" and damage_type ~= "burninating") or
 				(string.find(damage_source_name, "bw_skullstaff_geiser") == nil and
 				(damage_type ~= "burninating" or string.find(damage_source_name, "grenade_fire") == nil))) then
- 
+
 				local first_person_extension = ScriptUnit.extension(unit, "first_person_system")
 
 				if 0 < hit[DamageDataIndex.DAMAGE_AMOUNT] then
@@ -595,12 +646,12 @@ Mods.hook.set(mod_name, "HitReactions.templates.player.unit", function(func, uni
 
 	return
 end)
- 
+
 Mods.hook.set(mod_name, "DamageIndicatorGui.update", function(func, self, dt)
     if not user_setting(MOD_SETTINGS.ALTERNATIVE_FF_UI.save) then
         return func(self, dt)
     end
- 
+
     local input_manager = self.input_manager
     local input_service = input_manager.get_service(input_manager, "ingame_menu")
     local ui_renderer = self.ui_renderer
@@ -609,17 +660,17 @@ Mods.hook.set(mod_name, "DamageIndicatorGui.update", function(func, self, dt)
     local peer_id = self.peer_id
     local my_player = self.player_manager:player_from_peer_id(peer_id)
     local player_unit = my_player.player_unit
- 
+
     if not player_unit then
         return
     end
- 
+
     UIRenderer.begin_pass(ui_renderer, ui_scenegraph, input_service, dt, "damage_indicator_center")
- 
+
     local damage_extension = ScriptUnit.extension(player_unit, "damage_system")
     local strided_array, array_length = damage_extension.recent_damages(damage_extension)
     local indicator_positions = self.indicator_positions
- 
+
     if 0 < array_length then
         for i = 1, array_length/DamageDataIndex.STRIDE, 1 do
             local index = (i - 1)*DamageDataIndex.STRIDE
@@ -627,35 +678,35 @@ Mods.hook.set(mod_name, "DamageIndicatorGui.update", function(func, self, dt)
             local damage_type = strided_array[index + DamageDataIndex.DAMAGE_TYPE]
             local damage_source_name = strided_array[index + DamageDataIndex.DAMAGE_SOURCE_NAME]
             local show_direction = not ignored_damage_types_indicator[damage_type]
- 
+
             if ((is_player_unit(attacker) and attacker ~= player_unit) or
                 (damage_type == "burninating" and string.find(damage_source_name, "grenade_fire") ~= nil) or
                 ((damage_type == "burn" or damage_type == "burninating") and string.find(damage_source_name, "bw_skullstaff_geiser") ~= nil)) then
                 show_direction = false
             end
- 
+
             if attacker and Unit.alive(attacker) and show_direction then
                 local next_active_indicator = self.num_active_indicators + 1
- 
+
                 if next_active_indicator <= MAX_INDICATOR_WIDGETS then
                     self.num_active_indicators = next_active_indicator
                 else
                     next_active_indicator = 1
                 end
- 
+
                 local widget = indicator_widgets[next_active_indicator]
                 local indicator_position = indicator_positions[next_active_indicator]
                 local attacker_position = POSITION_LOOKUP[attacker] or Unit.world_position(attacker, 0)
- 
+
                 Vector3Aux.box(indicator_position, attacker_position)
- 
+
                 indicator_position[3] = 0
- 
+
                 UIWidget.animate(widget, UIAnimation.init(UIAnimation.function_by_time, widget.style.rotating_texture.color, 1, 255, 0, 1, math.easeInCubic))
             end
         end
     end
- 
+
     local first_person_extension = ScriptUnit.extension(player_unit, "first_person_system")
     local my_pos = Vector3.copy(POSITION_LOOKUP[player_unit])
     local my_rotation = first_person_extension.current_rotation(first_person_extension)
@@ -666,10 +717,10 @@ Mods.hook.set(mod_name, "DamageIndicatorGui.update", function(func, self, dt)
     my_pos.z = 0
     local i = 1
     local num_active_indicators = self.num_active_indicators
- 
+
     while i <= num_active_indicators do
         local widget = indicator_widgets[i]
- 
+
         if not UIWidget.has_animation(widget) then
             local swap = indicator_widgets[num_active_indicators]
             indicator_widgets[i] = swap
@@ -682,17 +733,18 @@ Mods.hook.set(mod_name, "DamageIndicatorGui.update", function(func, self, dt)
             local angle = math.atan2(left_dot_dir, forward_dot_dir)
             widget.style.rotating_texture.angle = angle
             i = i + 1
- 
+
             UIRenderer.draw_widget(ui_renderer, widget)
         end
     end
- 
+
     self.num_active_indicators = num_active_indicators
- 
+
     UIRenderer.end_pass(ui_renderer)
- 
+
     return
 end)
+
 
 Mods.hook.set(mod_name, "UnitFrameUI.draw", function(orig_func, self, dt)
 	local data = self.data
@@ -703,18 +755,22 @@ Mods.hook.set(mod_name, "UnitFrameUI.draw", function(orig_func, self, dt)
 
 		if data._hudmod_ff_state ~= nil then
 			local widget = self._hudmod_ff_widget
-			if not widget then
+			if not widget or rawget(_G, "_customhud_defined") and CustomHUD.was_toggled then
 				-- This is the first FF from this player, create the indicator widget for his HUD area.
 				local rect = UIWidgets.create_simple_rect("pivot", Colors.get_table("firebrick"))
 				rect.style.rect.size = { 308, 132 }
 				rect.style.rect.offset = { -50, -65 }
+				if rawget(_G, "_customhud_defined") and CustomHUD.enabled then
+					rect.style.rect.size = { 184, 20 }
+					rect.style.rect.offset = {53, -49.5, -10}
+				end
 				widget = UIWidget.init(rect)
 				self._hudmod_ff_widget = widget
 			end
 
 			if data._hudmod_ff_state == FF_STATE_STARTING then
 				-- New damage, restart the animation.
-				UIWidget.animate(widget, UIAnimation.init(UIAnimation.function_by_time, widget.style.rect.color, 1, 255, 0, 1, math.easeInCubic))
+				UIWidget.animate(widget, UIAnimation.init(UIAnimation.function_by_time, widget.style.rect.color, 1, rawget(_G, "_customhud_defined") and CustomHUD.enabled and 200 or 255, 0, 1, math.easeInCubic))
 				data._hudmod_ff_state = FF_STATE_ONGOING
 			end
 
@@ -727,27 +783,23 @@ Mods.hook.set(mod_name, "UnitFrameUI.draw", function(orig_func, self, dt)
 			end
 		end
 
-		UIRenderer.end_pass(ui_renderer)
-
-		---------------------------------
-
-		UIRenderer.begin_pass(ui_renderer, self.ui_scenegraph, input_service, dt, nil, self.render_settings)
-
 		if user_setting(MOD_SETTINGS.PARTY_TRINKETS_INDICATORS.save) then
 			local widget = self._trinkets_widget
-			if not widget then
+			if not widget or rawget(_G, "_customhud_defined") and CustomHUD.was_toggled then
 				widget = UIWidget.init(trinkets_widget)
 				self._trinkets_widget = widget
 
 				if self._hudmod_is_own_player then
+					widget.offset[2] = -85
 					for _, trinket_style in pairs(widget.style) do
-						trinket_style.offset[1] = trinket_style.offset[1] - 295
+						trinket_style.offset[1] = trinket_style.offset[1] - (rawget(_G, "_customhud_defined") and CustomHUD.enabled and 291 or 295)
 					end
 				end
 			end
 
+			-- show/hide trinket widgets and assign trinket icons
 			local important_trinkets = data._hudmod_active_trinkets or {}
-			for i=1,9 do
+			for i=1,10 do
 				widget.content["trinket_"..i].show = false
 				if important_trinkets[i] then
 					if i < 6 or important_trinkets[i-5] then
@@ -756,82 +808,88 @@ Mods.hook.set(mod_name, "UnitFrameUI.draw", function(orig_func, self, dt)
 					elseif i == dupe_position then
 						widget.content["trinket_"..luck_position].show = true
 						widget.content["trinket_"..luck_position].texture_id = important_trinkets[i].icon
+					elseif i == sisterhood_position then
+						widget.content["trinket_"..lichbone_position].show = true
+						widget.content["trinket_"..lichbone_position].texture_id = important_trinkets[i].icon
 					end
 				end
 			end
 
-			UIRenderer.draw_widget(ui_renderer, widget)
+			-- dove trinket related stuff
+			widget.content["trinket_"..100].show = not not important_trinkets[100]
+			widget.content["trinket_"..101].show = widget.content["trinket_"..100].show
+			if widget.content["trinket_"..100].show then
+				widget.content["trinket_"..100].texture_id = important_trinkets[100].icon
+				widget.content["trinket_"..101].texture_id = important_trinkets[100].icon
+				if important_trinkets[6] then
+					widget.content["trinket_"..6].show = true
+					widget.content["trinket_"..6].texture_id = important_trinkets[6].icon
+				end
+			end
+
+			-- render trinkets widget if player not dead or respawned
+			if not self._customhud_is_dead and not self._customhud_player_unit_missing and not self._customhud_has_respawned then
+				UIRenderer.draw_widget(ui_renderer, widget)
+			end
 		end
-
-		UIRenderer.end_pass(ui_renderer)
-
-		---------------------------------
-
-		UIRenderer.begin_pass(ui_renderer, self.ui_scenegraph, input_service, dt, nil, self.render_settings)
 
 		if user_setting(MOD_SETTINGS.DODGE_TIRED.save) then
 			local widget = self._dodge_tired_widget
- 
+
 			if not widget then
 				local widget_settings = {}
 				widget_settings = table.create_copy(widget_settings, dodge_tired_widget)
 				widget = UIWidget.init(widget_settings)
 				self._dodge_tired_widget = widget
 			end
- 
+
 			if data._hudmod_dodge_value == nil or data._hudmod_dodge_value >= 1.7 then
 				widget.content.dodge_tired_text = ""
 			else
 				widget.content.dodge_tired_text = "TIRED"
 			end
- 
+
 			UIRenderer.draw_widget(ui_renderer, widget)
 		end
- 
+
 		UIRenderer.end_pass(ui_renderer)
 	end
 
 	return orig_func(self, dt)
 end)
 
-Mods.hook.set(mod_name, "PlayerInventoryUI.set_visible", function (orig_func, self, visible)
-	-- In the gamepad HUD the inventory UI is part of the unit frame.
-	if user_setting(MOD_SETTINGS.FORCE_GAMEPAD_HUD.save) then
-		visible = false
-	end
-	return orig_func(self, visible)
-end)
-
-Mods.hook.set(mod_name, "BoonUI.update", function (func, self, dt, t)
-	func(self, dt, t)
-	-- Force update boon positions when mod turned on/off
-	if user_setting(MOD_SETTINGS.FORCE_GAMEPAD_HUD.save) then
-		if not self.force_gamepad_active_last_frame then
-			self.force_gamepad_active_last_frame = true
-
-			self.on_gamepad_activated(self)
-		end
-	elseif self.force_gamepad_active_last_frame then
-		self.force_gamepad_active_last_frame = false
-
-		self.on_gamepad_deactivated(self)
-	end
-end)
-
-Mods.hook.set(mod_name, "BoonUI._align_widgets", function (func, self)
-	func(self)
-	-- -250 X widget offset on boons for gamepad needs to be manually reapplied
-	if user_setting(MOD_SETTINGS.FORCE_GAMEPAD_HUD.save) then
-		local boon_width = 38
-		local boon_spacing = 15
-		local widget_total_width = 0
-		for _, data in ipairs(self._active_boons) do
-			local widget = data.widget
-			local widget_offset = widget.offset
-			widget_offset[1] = -250 + widget_total_width
-			widget_total_width = widget_total_width - (boon_width + boon_spacing)
+-- Update the reload reminder (for normal HUD).
+Mods.hook.set(mod_name, "PlayerInventoryUI.update_inventory_slots", function (orig_func, self, dt, ui_scenegraph, ui_renderer, my_player)
+	local show_reload_reminder_enabled = user_setting(MOD_SETTINGS.RELOAD_REMINDER.save)
+	if show_reload_reminder_enabled or self.show_reload_reminder then
+		local show_reload_reminder = requires_reload(my_player) and show_reload_reminder_enabled
+		local bg_texture = (show_reload_reminder and "stance_bar_blue") or "weapon_generic_icons_bg"
+		local bg_widget = self.inventory_slots_widgets[2]
+		self.inventory_slots_widgets[2].content.show_reload_reminder = show_reload_reminder
+		self.show_reload_reminder = show_reload_reminder
+		if bg_widget.content.background ~= bg_texture then
+			bg_widget.content.background = bg_texture
+			local bg_style = bg_widget.style.background
+			if show_reload_reminder then
+				bg_style.color[3] = 0
+				bg_style.color[4] = 0
+				bg_style.texture_size = { 250, 72 }
+				bg_style.horizontal_alignment = "right"
+				bg_style.vertical_alignment = "center"
+				bg_style.offset = { -5, 0 }
+			else
+				bg_style.color[3] = 255
+				bg_style.color[4] = 255
+				bg_style.texture_size = nil
+				bg_style.horizontal_alignment = nil
+				bg_style.vertical_alignment = nil
+				bg_style.offset = nil
+			end
+			bg_widget.element.dirty = true
 		end
 	end
+
+	return orig_func(self, dt, ui_scenegraph, ui_renderer, my_player)
 end)
 
 --[[
@@ -859,40 +917,11 @@ Mods.hook.set(mod_name, "GenericUnitInteractorExtension.interaction_description"
 end)
 
 Mods.hook.set(mod_name, "Localize", function (func, id, ...)
-	if user_setting(MOD_SETTINGS.POTION_PICKUP.save) and string.find(id, "DONT_LOCALIZE_") == 1 then
+	if string.find(id, "DONT_LOCALIZE_") == 1 and user_setting(MOD_SETTINGS.POTION_PICKUP.save) then
 		return string.sub(id, 15)
 	end
+
 	return func(id, ...)
-end)
-
---[[
-	Damage Taken Scoreboard Fix, by Grundlid.
---]]
-Mods.hook.set(mod_name, "GenericUnitDamageExtension.add_damage", function (func, self, attacker_unit, damage_amount, hit_zone_name, damage_type, damage_direction, damage_source_name, hit_ragdoll_actor, damaging_unit)
-	if not user_setting(MOD_SETTINGS.DAMAGE_TAKEN.save) then
-		return func(self, attacker_unit, damage_amount, hit_zone_name, damage_type, damage_direction, damage_source_name, hit_ragdoll_actor, damaging_unit)
-	end
-
-	local original_register_damage = StatisticsUtil.register_damage
-
-	if Managers.player:owner(self.unit) and ScriptUnit.has_extension(self.unit, "health_system") and ScriptUnit.has_extension(self.unit, "buff_system") then
-		local health_extension = ScriptUnit.extension(self.unit, "health_system")
-		local buff_extension = ScriptUnit.extension(self.unit, "buff_system")
-
-		StatisticsUtil.register_damage = function(victim_unit, damage_data, statistics_db)
-			local overflow = health_extension.damage + damage_amount - health_extension.health
-			if buff_extension:has_buff_type("knockdown bleed") then
-				damage_data[DamageDataIndex.DAMAGE_AMOUNT] = 0
-			elseif overflow > 0 then
-				damage_data[DamageDataIndex.DAMAGE_AMOUNT] = damage_data[DamageDataIndex.DAMAGE_AMOUNT] - overflow
-			end
-			original_register_damage(victim_unit, damage_data, statistics_db)
-		end
-	end
-
-	func(self, attacker_unit, damage_amount, hit_zone_name, damage_type, damage_direction, damage_source_name, hit_ragdoll_actor, damaging_unit)
-
-	StatisticsUtil.register_damage = original_register_damage
 end)
 
 --[[
@@ -909,6 +938,82 @@ Mods.hook.set(mod_name, "GenericStatusExtension.healed", function (func, self, r
 end)
 
 --[[
+	Faster rerolls
+--]]
+local function create_backup(backup_key, value)
+	if rawget(_G, backup_key) == nil then
+		rawset(_G, backup_key, value)
+	end
+end
+
+Mods.hook.set(mod_name, "AltarTraitRollUI.update", function (func, self, ...)
+	local faster_rerolls_enabled = user_setting(MOD_SETTINGS.FASTER_REROLLS.save)
+
+	-- make these changes on game start and on mod menu toggle
+	if self.faster_rerolls_last_update ~= faster_rerolls_enabled then
+		self.faster_rerolls_last_update = faster_rerolls_enabled
+
+		for i,sub_anim in ipairs(self.ui_animator.animation_definitions.fade_in_preview_window_2_traits) do
+			create_backup("m_fin_pw2t_"..i.."_start_progress", sub_anim.start_progress)
+			create_backup("m_fin_pw2t_"..i.."_end_progress", sub_anim.end_progress)
+
+			sub_anim.start_progress = faster_rerolls_enabled and 0 or rawget(_G, "m_fin_pw2t_"..i.."_start_progress")
+			sub_anim.end_progress = faster_rerolls_enabled and 0 or rawget(_G, "m_fin_pw2t_"..i.."_end_progress")
+		end
+		for i,sub_anim in ipairs(self.ui_animator.animation_definitions.fade_out_preview_window_2_traits) do
+			create_backup("m_fout_pw2t_"..i.."_start_progress", sub_anim.start_progress)
+			create_backup("m_fout_pw2t_"..i.."_end_progress", sub_anim.end_progress)
+
+			sub_anim.start_progress = faster_rerolls_enabled and 0 or rawget(_G, "m_fout_pw2t_"..i.."_start_progress")
+			sub_anim.end_progress = faster_rerolls_enabled and 0 or rawget(_G, "m_fout_pw2t_"..i.."_end_progress")
+		end
+	end
+
+	func(self, ...)
+end)
+
+-- animation values we'll use
+local anim_lookup = {
+	["traits_glow_fade_in"] = {
+		duration = 0.2,
+		start_delay = 0,
+	},
+	["traits_glow_fade_out"] = {
+		duration = 0.1,
+		start_delay = 0.3,
+	},
+	["traits_icon_new"] = {
+		duration = 0.05,
+		start_delay = 0,
+	},
+}
+Mods.hook.set(mod_name, "AltarTraitRollUI._animate_traits_widget_texture", function (func, self, data, ...)
+	local faster_rerolls_enabled = user_setting(MOD_SETTINGS.FASTER_REROLLS.save)
+	for _, anim_name in ipairs({"traits_glow_fade_in", "traits_glow_fade_out", "traits_icon_new"}) do
+		if data.animation_name == anim_name then
+			-- names of backup keys
+			local backup_key_duration = "m_"..anim_name.."_duration"
+			local backup_key_start_delay = "m_"..anim_name.."_start_delay"
+
+			-- backup the default animation values
+			create_backup(backup_key_duration, data.duration)
+			create_backup(backup_key_start_delay, data.start_delay)
+
+			-- use our own values from the anim_lookup table or restore the default values
+			data.duration = faster_rerolls_enabled and anim_lookup[anim_name].duration or rawget(_G, backup_key_duration)
+			data.start_delay = faster_rerolls_enabled and anim_lookup[anim_name].start_delay or rawget(_G, backup_key_start_delay)
+		end
+	end
+
+	-- don't show the lock icons on the rerolled traits
+	if faster_rerolls_enabled and data.animation_name == "traits_lock_new" then
+		return
+	end
+
+	func(self, data, ...)
+end)
+
+--[[
 	Add options for this module to the Options UI.
 --]]
 local function create_options()
@@ -920,10 +1025,10 @@ local function create_options()
 	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.PARTY_TRINKETS_INDICATORS)
 	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.HOMOGENIZE_PARTY_TRINKET_ICONS)
 	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.POTION_PICKUP)
-	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.DAMAGE_TAKEN)
 	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.HP_PROCS_FX)
 	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.DODGE_TIRED)
-	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.FORCE_GAMEPAD_HUD)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.RELOAD_REMINDER)
+	Mods.option_menu:add_item("hud_group", MOD_SETTINGS.FASTER_REROLLS)
 end
 
 local status, err = pcall(create_options)

@@ -218,3 +218,133 @@ function(func, self, sender, channel_id, message_sender, message, localization_p
 	
 	func(self, sender, channel_id, message_sender, message, localization_param, is_system_message, pop_chat, is_dev)
 end)
+
+--#### Illegitimate Endurance Badges and Grimoires #######################
+ 
+--[[ Assumptions:
+    For a host with CheatProtect, illegitimate endurance badges spawned by clients are impossible.
+    For a host with CheatProtect, illegitimate grimoires added by clients are impossible.
+    No wave completion at or past 300 is legitimate.
+    Number of legitimate endurance badges earned will never exceed 1/2 of waves completed.
+    On Cataclysm difficulty and higher, no more than 5 grimoires are potentially legal.
+    On Nightmare difficulty and lower, no more than 3 grimoires are potentially legal.
+--]]
+ 
+local endurance_mission_names = {
+    endurance_badge_01_mission = true,
+    endurance_badge_02_mission = true,
+    endurance_badge_03_mission = true,
+    endurance_badge_04_mission = true,
+    endurance_badge_05_mission = true
+}
+   
+local function check_endurance_badge_missions(mission_system, ingame)
+    local level_end_missions = mission_system.level_end_missions
+    local caught_dangerous_action = false
+   
+    -- Check for endurance badges outside of survival mode
+    if level_end_missions and not level_end_missions["survival_wave"] then
+        for mission_name, _ in pairs(endurance_mission_names) do
+            if level_end_missions[mission_name] then
+                level_end_missions[mission_name].evaluate_at_level_end = false
+                level_end_missions[mission_name].current_amount = 0
+               
+                caught_dangerous_action = true
+            end
+        end
+       
+    -- Check for too many endurance badges inside survival mode
+    elseif level_end_missions and level_end_missions["survival_wave"] then
+        local waves_completed = level_end_missions["survival_wave"].wave_completed or 0
+       
+        -- Sanity-check waves completed (prevents inflated numbers to bypass badge limit)
+        if waves_completed >= 300 then
+            level_end_missions["survival_wave"].wave_completed = 1
+            level_end_missions["survival_wave"].text = "Wave 1 Completed"
+            waves_completed = 1
+           
+            if not ingame then
+                EchoConsole("CheatProtect: Blocked attempt by a lobby player to inflate number of completed waves for your account. Such attempts can permanently affect account progression.")
+            else
+		local local_player = Managers.player:local_player()
+                Managers.chat:send_system_chat_message(1, "CheatProtect [By " .. local_player._cached_name .. "] : Lobby likely has inflated number of waves completed. Leave now or risk permanent alteration of your account progression.", 0, true)
+            end
+        end
+       
+        for mission_name, _ in pairs(endurance_mission_names) do
+            if level_end_missions[mission_name] then
+                local badges_collected = level_end_missions[mission_name].current_amount
+               
+                -- EchoConsole("[Debug] badges_collected: "..tostring(badges_collected)..", waves_completed: "..tostring(waves_completed)..", half of waves: "..tostring((waves_completed / 2))..", comparison: "..tostring((badges_collected > (waves_completed / 2))))
+               
+                if badges_collected and (badges_collected > (waves_completed / 2)) then
+                    level_end_missions[mission_name].evaluate_at_level_end = false
+                    level_end_missions[mission_name].current_amount = 0
+                   
+                    caught_dangerous_action = true
+                end
+            end
+        end
+    end
+   
+    -- Warn the player / lobby
+    if caught_dangerous_action then
+        if not ingame then
+            EchoConsole("CheatProtect: Blocked attempt by a lobby player to flood your account with illegitimate endurance badges. Such attempts can permanently affect account progression.")
+        else
+	    local local_player = Managers.player:local_player()
+            Managers.chat:send_system_chat_message(1, "CheatProtect [By " .. local_player._cached_name .. "] : Lobby has spawned illegitimate endurance badges. Leave now or risk permanent alteration of your account progression.", 0, true)
+        end
+    end
+end
+ 
+local function check_grimoire_missions(mission_system)
+    local active_missions = mission_system.active_missions
+    local grimoire_mission = active_missions["grimoire_hidden_mission"]
+    local rank = Managers.state.difficulty:get_difficulty_rank()
+   
+    -- Check for illegal number of grimoires (accounting for onslaught / deathwish)
+    if grimoire_mission then
+        --EchoConsole("Difficulty: " .. tostring(rank) .. ", Grimoire Count: " .. tostring(grimoire_mission.current_amount))
+        if rank == 5 and grimoire_mission.current_amount > 5 then
+            EchoConsole("CheatProtect: Blocked attempt by a lobby player to add illegitimate grimoires. Such attempts can permanently affect your account progression.")
+            grimoire_mission.current_amount = 0
+        elseif rank < 5 and grimoire_mission.current_amount > 3 then
+            EchoConsole("CheatProtect: Blocked attempt by a lobby player to add illegitimate grimoires. Such attempts can permanently affect your account progression.")
+            grimoire_mission.current_amount = 0
+        end
+    end
+end
+ 
+-- Protects the player at the endgame screen
+Mods.hook.set(mod_name, "MissionSystem.evaluate_level_end_missions",
+function(func, self, ...)
+    check_endurance_badge_missions(self, false)
+    check_grimoire_missions(self)
+   
+    func(self, ...)
+    return
+end)
+ 
+-- Protects the player as a client, ingame
+Mods.hook.set(mod_name, "MissionSystem.rpc_update_mission",
+function(func, self, peer_id, mission_name_id, sync_data, ...)
+    func(self, peer_id, mission_name_id, sync_data, ...)
+   
+    check_endurance_badge_missions(self, true)
+    return
+end)
+ 
+-- Protects the player when survival game is counted as a loss, but illegal badges were acquired
+Mods.hook.set(mod_name, "StateInGameRunning.gm_event_end_conditions_met",
+function(func, self, reason, checkpoint_available, ...)
+    local game_mode_key = Managers.state.game_mode:game_mode_key()
+    local game_won = reason and reason == "won"
+    if game_mode_key == "survival" and not game_won then
+        local mission_system = Managers.state.entity:system("mission_system")
+        check_endurance_badge_missions(mission_system, false)
+    end
+   
+    func(self, reason, checkpoint_available, ...)
+    return
+end)

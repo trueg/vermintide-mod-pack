@@ -340,6 +340,19 @@ BotImprovements = {
 			},
 			["default"] = 1, -- Default first option is enabled. In this case Off
 		},
+		BOTS_BLOCK_ON_PATH_SEARCH = {
+			["save"] = "cb_bot_improvements_extra_block_pathing",
+			["widget_type"] = "stepper",
+			["text"] = "Block While Path-Searching",
+			["tooltip"] = "Block While Path-Searching\n" ..
+				"Bots block as they pause to search for a path to the player.",
+			["value_type"] = "boolean",
+			["options"] = {
+				{text = "Off", value = false},
+				{text = "On", value = true}
+			},
+			["default"] = 2, -- Default second option is enabled. In this case On
+		},
 		AUTOEQUIP = {
 			["save"] = "cb_autoequip",
 			["widget_type"] = "stepper",
@@ -374,7 +387,8 @@ BotImprovements = {
 			["widget_type"] = "stepper",
 			["text"] = "Loadout slot to use",
 			["tooltip"] = "Loadout slot to use\n" ..
-				"Autoequip bot from this loadout slot.",
+				"Autoequip bot from this loadout slot.\n" ..
+				"ONLY CHANGEABLE IN INN!",
 			["value_type"] = "number",
 			["options"] = (function()
 					local stepper = {}
@@ -384,6 +398,7 @@ BotImprovements = {
 					return stepper
 					end)(),
 			["default"] = 1, -- Default to 1
+			["disabled_outside_inn"] = true, -- disabled_outside_inn setting only implemented on stepper widgets!
 		},
 	},
 }
@@ -428,6 +443,7 @@ BotImprovements.create_options = function()
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.FIX_REVIVE, true)
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.REDUCE_PICKUP_TRAVEL, true)
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.FOLLOW, true)
+	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.BOTS_BLOCK_ON_PATH_SEARCH, true)
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.AUTOEQUIP, true)
 	Mods.option_menu:add_item("bot_improvements", me.SETTINGS.AUTOEQUIP_SLOT)
 end
@@ -1690,6 +1706,95 @@ Mods.hook.set(mod_name, "BackendUtils.get_loadout_item", function (func, profile
 	return item_data
 end)
 Mods.hook.front(mod_name, "BackendUtils.get_loadout_item")
+
+-- ####################################################################################################################
+-- ##### Block on Path Search by Aussiemon ############################################################################
+-- ####################################################################################################################
+
+-- ##########################################################
+-- ################## Functions #############################
+
+me.manual_block = function(unit, blackboard, should_block, t)
+	if unit and Unit.alive(unit) and blackboard and blackboard.input_extension then
+		local input_extension = blackboard.input_extension
+		
+		if should_block then
+			input_extension:wield("slot_melee")
+			input_extension._defend = true
+			blackboard._block_start_time_BIE = t
+			
+		elseif t > (blackboard._block_start_time_BIE + 1) then
+			input_extension._defend = false
+			blackboard._block_start_time_BIE = nil
+		end
+	end
+end
+
+me.auto_block = function(unit, status)
+	if unit and Unit.alive(unit) and ScriptUnit.has_extension(unit, "status_system") then
+		local status_extension = ScriptUnit.extension(unit, "status_system")
+		local go_id = Managers.state.unit_storage:go_id(unit)
+
+		Managers.state.network.network_transmit:send_rpc_clients("rpc_set_blocking", go_id, status)
+	   
+		status_extension.set_blocking(status_extension, status)
+	end
+end
+
+-- ##########################################################
+-- #################### Hooks ###############################
+
+-- ## Bots Block on Path Search - Teleport to Ally Action ##
+-- Start blocking as the teleport action begins
+Mods.hook.set(mod_name, "BTBotTeleportToAllyAction.enter", function (func, self, unit, blackboard, t)
+	
+	if get(me.SETTINGS.BOTS_BLOCK_ON_PATH_SEARCH) then 
+		me.manual_block(unit, blackboard, true, t)
+	end
+	
+	-- Original Function
+	local result = func(self, unit, blackboard, t)
+	return result
+end)
+
+-- Continue blocking as the teleport action runs
+Mods.hook.set(mod_name, "BTBotTeleportToAllyAction.run", function (func, self, unit, blackboard, t)
+	
+	if get(me.SETTINGS.BOTS_BLOCK_ON_PATH_SEARCH) then 
+		me.manual_block(unit, blackboard, true, t)
+	end
+	
+	-- Original Function
+	local result = func(self, unit, blackboard, t)
+	return result
+end)
+
+-- Cancel blocking when the teleport action ends
+Mods.hook.set(mod_name, "BTBotTeleportToAllyAction.leave", function (func, self, unit, blackboard, t)
+	
+	-- Original Function
+	local result = func(self, unit, blackboard, t)
+	
+	if get(me.SETTINGS.BOTS_BLOCK_ON_PATH_SEARCH) then 
+		me.manual_block(unit, blackboard, false, t)
+	end
+	
+	return result
+end)
+
+
+-- ## Bots Block on Path Search - Nil Action ##
+-- Start blocking when the nil action ends, and hold the block until the game decides to release it
+Mods.hook.set(mod_name, "BTNilAction.leave", function (func, self, unit, blackboard, t)
+	
+	if get(me.SETTINGS.BOTS_BLOCK_ON_PATH_SEARCH) then 
+		me.manual_block(unit, blackboard, true, t)
+	end
+	
+	-- Original Function
+	local result = func(self, unit, blackboard, t)
+	return result
+end)
 
 -- ####################################################################################################################
 -- ##### Start ########################################################################################################

@@ -146,12 +146,13 @@ Mods.hook.set(mod_name, "ActionTrueFlightBowAim.client_owner_post_update", funct
 	if self.current_action.anim_event == "attack_charge_spear" and user_setting(MOD_SETTINGS.BOLT_STAFF_HIDE_HANDS.save) then
 		local charge_value = self.charge_value
 		local should_hide_hand = (0.25 < charge_value) and (charge_value < 0.95)
+		local is_third_person_mod = Mods.ThirdPerson and Mods.ThirdPerson.SETTINGS and Mods.ThirdPerson.SETTINGS.ACTIVE and Mods.ThirdPerson.SETTINGS.ACTIVE.save and user_setting(Mods.ThirdPerson.SETTINGS.ACTIVE.save)
 
-		if should_hide_hand and not self._tftweak_hidden then
+		if should_hide_hand and not self._tftweak_hidden and not is_third_person_mod then
 			set_hand_hidden(self.owner_unit, true)
 			self._tftweak_hidden = true
 
-		elseif not should_hide_hand and self._tftweak_hidden then
+		elseif not should_hide_hand and self._tftweak_hidden and not is_third_person_mod then
 			set_hand_hidden(self.owner_unit, false)
 			self._tftweak_hidden = false
 		end
@@ -168,8 +169,11 @@ Mods.hook.set(mod_name, "ActionTrueFlightBowAim.finish", function(orig_func, sel
 		end
 	end
 	if self._tftweak_hidden then
-		set_hand_hidden(self.owner_unit, false)
-		self._tftweak_hidden = false
+		local is_third_person_mod = Mods.ThirdPerson and Mods.ThirdPerson.SETTINGS and Mods.ThirdPerson.SETTINGS.ACTIVE and Mods.ThirdPerson.SETTINGS.ACTIVE.save and user_setting(Mods.ThirdPerson.SETTINGS.ACTIVE.save)
+		if not is_third_person_mod then
+			set_hand_hidden(self.owner_unit, false)
+			self._tftweak_hidden = false
+		end
 	end
 
 	return orig_func(self, ...)

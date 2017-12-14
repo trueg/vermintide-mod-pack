@@ -1,10 +1,10 @@
+local mod_name = "HealthBars"
 --[[ 
 	Enemy health bars
 		- Show health bars for enemies
 	
 	Author: grasmann
 --]]
-local mod_name = "HealthBars"
 
 -- Backup units list
 local units_bak = {}
@@ -368,12 +368,13 @@ end)
 	Remove health bar from gutter runner when he's vanishing
 --]]
 Mods.hook.set(mod_name, "BTSelector_gutter_runner.run", function(func, self, unit, blackboard, ...)
-	func(self, unit, blackboard, ...)
+	local result, evaluate = func(self, unit, blackboard, ...)
 	local child_running = self.current_running_child(self, blackboard)
 	local node_ninja_vanish = self._children[5]
 	if node_ninja_vanish == child_running then
-		me.remove_health_bar(unit)		
+		me.remove_health_bar(unit)
 	end
+	return result, evaluate
 end)
 
 -- ####################################################################################################################
@@ -578,6 +579,65 @@ end
 --[[
 	Clean units in the health bar system
 --]]
+
+local obstructed_line_of_sight = function(player_unit, target_unit)
+	local INDEX_POSITION = 1
+	local INDEX_DISTANCE = 2
+	local INDEX_NORMAL = 3
+	local INDEX_ACTOR = 4
+
+	local pinged = ScriptUnit.has_extension(target_unit, "ping_system") and ScriptUnit.extension(target_unit, "ping_system"):pinged()
+	if pinged then
+		return false
+	end
+
+	local player_unit_pos = Unit.world_position(player_unit, 0)
+	player_unit_pos.z = player_unit_pos.z + 1.5
+	local target_unit_pos = Unit.world_position(target_unit, 0)
+	target_unit_pos.z = target_unit_pos.z + 1.4
+
+	local tutorial_system = Managers.state.entity:system("tutorial_system")
+	local tutorial_ui = tutorial_system.tutorial_ui
+	local world = tutorial_ui.world_manager:world("level_world")
+	local physics_world = World.get_data(world, "physics_world")
+	local max_distance = Vector3.length(target_unit_pos - player_unit_pos)
+	
+	if max_distance < 5 then
+		return false
+	end
+
+	local direction = target_unit_pos - player_unit_pos
+	local length = Vector3.length(direction)
+	direction = Vector3.normalize(direction)
+	local collision_filter = "filter_player_ray_projectile"
+
+	PhysicsWorld.prepare_actors_for_raycast(physics_world, player_unit_pos, direction, 0.01, 10, max_distance*max_distance)
+
+	local raycast_hits = PhysicsWorld.immediate_raycast(physics_world, player_unit_pos, direction, max_distance, "all", "collision_filter", collision_filter)
+
+	if raycast_hits then
+		local num_hits = #raycast_hits
+
+		for i = 1, num_hits, 1 do
+			local hit = raycast_hits[i]
+			local hit_actor = hit[INDEX_ACTOR]
+			local hit_unit = Actor.unit(hit_actor)
+
+			if hit_unit == target_unit then
+				return false
+			elseif hit_unit ~= player_unit then
+				local obstructed_by_static = Actor.is_static(hit_actor)
+
+				if obstructed_by_static then
+					return obstructed_by_static
+				end
+			end
+		end
+	end
+
+	return false
+end
+
 EnemyHealthBars.clean_units = function()
 	for _, unit in pairs(me.units) do
 		if not Unit.alive(unit) then
@@ -590,7 +650,7 @@ EnemyHealthBars.clean_units = function()
 			local player_pos = Unit.world_position(player_unit, 0)
 			local dir = unit_pos - player_pos
 			local distance = Vector3.length(dir)
-			if distance > me.VERY_FAR then
+			if distance > me.VERY_FAR or obstructed_line_of_sight(player_unit, unit) then
 				me.remove_health_bar(unit)
 			end
 		end

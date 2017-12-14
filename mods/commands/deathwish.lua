@@ -18,6 +18,11 @@ end
 if not deathwishtoken then
 	deathwishtoken = true
 
+	OriginalBreedsMaxHealth = {}
+	for name, breed in pairs(Breeds) do
+		OriginalBreedsMaxHealth[name] = breed.max_health[5]
+	end
+
 	Breeds.skaven_clan_rat.max_health[5] = 18
 
 	Breeds.skaven_slave.max_health[5] = 9
@@ -30,7 +35,7 @@ if not deathwishtoken then
 
 	Breeds.skaven_poison_wind_globadier.max_health[5] = 30
 
-	Breeds.skaven_ratling_gunner.max_health[5] = 24
+	Breeds.skaven_ratling_gunner.max_health[5] = 30
 
 	Breeds.skaven_storm_vermin.max_health[5] = 50
 
@@ -426,7 +431,7 @@ if not deathwishtoken then
 	Mods.hook.set("Gamemodes", "PlayerUnitHealthExtension._knock_down", function(func, self, unit)
 		local rank = Managers.state.difficulty:get_difficulty_rank()
 
-		if rank == 5 then
+		if rank == 5 and Managers.state.game_mode._game_mode_key ~= "inn" then
 			PlayerUnitHealthExtension.die(self, unit)
 			return
 		else
@@ -795,23 +800,9 @@ if not deathwishtoken then
 else
 	deathwishtoken = false
 
-	Breeds.skaven_slave.max_health[5] = 5
-
-	Breeds.skaven_clan_rat.max_health[5] = 10
-
-	Breeds.skaven_storm_vermin.max_health[5] = 20
-
-	Breeds.skaven_storm_vermin_commander.max_health[5] = 20
-
-	Breeds.skaven_gutter_runner.max_health[5] = 20
-
-	Breeds.skaven_pack_master.max_health[5] = 36
-
-	Breeds.skaven_poison_wind_globadier.max_health[5] = 20
-
-	Breeds.skaven_ratling_gunner.max_health[5] = 10
-
-	Breeds.skaven_loot_rat.max_health[5] = 50
+	for name, breed in pairs(Breeds) do
+		breed.max_health[5] = OriginalBreedsMaxHealth[name]
+	end
 
 	BreedActions.skaven_clan_rat.first_attack.difficulty_damage.hardest = {
 							15,
